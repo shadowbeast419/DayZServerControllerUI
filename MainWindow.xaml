@@ -1,0 +1,76 @@
+﻿<Window x:Class="DayZServerControllerUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DayZServerControllerUI"
+        mc:Ignorable="d"
+        Title="DayZ-Server Controller" Height="336" Width="507" MinHeight="340" MinWidth="500">
+    <Grid>
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Configure Paths..."/>
+                    <MenuItem Header="_Reset Paths"/>
+                </MenuItem>
+                <MenuItem Header="_Settings">
+                    <MenuItem Header="_Configure Paths..."/>
+                    <MenuItem Header="_Reset Paths"/>
+                </MenuItem>
+                <MenuItem Header="_About">
+                    <MenuItem Header="_Configure Paths..."/>
+                    <MenuItem Header="_Reset Paths"/>
+                </MenuItem>
+            </Menu>
+            <TabControl>
+                <TabItem Header="Control Panel">
+                    <Grid Background="#FFE5E5E5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <GroupBox Header="Steam Client Status" Grid.Row="0">
+                            <Label Content="Process not detected" Foreground="#FFA02727"/>
+                        </GroupBox>
+                        <GroupBox Header="DayZ Server Status" Grid.Row="1">
+                            <Label Content="Process not detected" Foreground="#FFA02727"/>
+                        </GroupBox>
+                        <GroupBox Header="Control" Grid.Row="2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Button Content="Start Server" Grid.Row="0" Grid.Column="0" Foreground="#FF519A16"/>
+                                <Button Content="Stop Server" Grid.Row="0" Grid.Column="1" Foreground="#FF6B1818"/>
+                                <Grid Grid.Row="1" Grid.ColumnSpan="2">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="100"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Label Content="Restart Period (x Minutes left)" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <ProgressBar Name="progressBarRestartPeriod" Height="30" Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom"/>
+                                    <Label Name="labelStartTime" Content="StartTimeString" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom"></Label>
+                                    <Label Name="labelEndTime" Content="EndTimeString" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Bottom"></Label>
+                                </Grid>
+                            </Grid>
+                        </GroupBox>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Mods">
+                    <Grid Background="#FFE5E5E5"/>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+    </Grid>
+</Window>
