@@ -22,7 +22,7 @@ namespace DayZServerControllerUI.LogParser
         {
             Dictionary<DateTime, TimeSpan> onlineTimeDict = new Dictionary<DateTime, TimeSpan>();
 
-            if (logLines == null || logLines.Count == 0)
+            if (logLines.Count == 0)
                 return onlineTimeDict;
 
             DateTime currentDate = DateTime.MinValue;

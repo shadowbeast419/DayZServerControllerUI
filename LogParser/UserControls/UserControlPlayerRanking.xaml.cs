@@ -22,7 +22,6 @@ namespace DayZServerControllerUI.LogParser.UserControls
     {
         private LogParserViewModel? _viewModel;
         private bool _showTimeInHours = true;
-        private bool _viewModelInitialized = false;
 
         public UserControlPlayerRanking()
         {
@@ -48,7 +47,7 @@ namespace DayZServerControllerUI.LogParser.UserControls
         {
             _showTimeInHours = true;
 
-            if (!_viewModelInitialized)
+            if (_viewModel == null)
                 return;
 
             UpdateRanking(_viewModel.OnlineStatistics.ToList());
@@ -58,7 +57,7 @@ namespace DayZServerControllerUI.LogParser.UserControls
         {
             _showTimeInHours = false;
 
-            if (!_viewModelInitialized)
+            if (_viewModel == null)
                 return;
 
             UpdateRanking(_viewModel.OnlineStatistics.ToList());

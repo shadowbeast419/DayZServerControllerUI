@@ -12,8 +12,8 @@ namespace DayZServerControllerUI.LogParser
     {
         public string DbPath { get; }
 
-        public DbSet<DayZPlayer> Players { get; set; }
-        public DbSet<LogLine> LogLines { get; set; }
+        public DbSet<DayZPlayer>? Players { get; set; }
+        public DbSet<LogLine>? LogLines { get; set; }
 
         public LoggingDbContext()
         {

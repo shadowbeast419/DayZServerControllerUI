@@ -75,6 +75,10 @@ namespace DayZServerControllerUI.CtrlLogic
         {
             Console.WriteLine("Fetching Mods from Modlist...");
             _modListDict = await _modlistReader.GetModsFromFile();
+
+            if (_modListDict == null)
+                return;
+
             Console.WriteLine($"{_modListDict.Count} Mods found in file.");
 
             _workshopServerModFolderDir.Clear();
@@ -134,12 +138,12 @@ namespace DayZServerControllerUI.CtrlLogic
             }
 
             IList<DirectoryInfo> changedModList = _modFileWatchers.EndWatching();
-            List<DirectoryInfo> _modsToCopy = new List<DirectoryInfo>();
+            List<DirectoryInfo> modsToCopy = new List<DirectoryInfo>();
 
             foreach(DirectoryInfo modPath in changedModList)
             {
-                if (!_modsToCopy.Contains(modPath))
-                    _modsToCopy.Add(modPath);
+                if (!modsToCopy.Contains(modPath))
+                    modsToCopy.Add(modPath);
             }
 
             Console.WriteLine($"{changedModList.Count} Mods have been updated by SteamAPI.");

@@ -24,8 +24,11 @@ namespace DayZServerControllerUI.LogParser.UserControls
 
         private void ComboBoxPlayers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_viewModel == null)
+                return;
+
             DayZPlayer selectedPlayer = (DayZPlayer)comboBoxPlayers.SelectedItem;
-            PlayerStatistics statistics = _viewModel.OnlineStatistics.FirstOrDefault(x => x.Player == selectedPlayer);
+            PlayerStatistics? statistics = _viewModel.OnlineStatistics.FirstOrDefault(x => x.Player == selectedPlayer);
 
             if (statistics != null)
             {
