@@ -14,24 +14,40 @@
   <ItemGroup>
     <PackageReference Include="CredentialManagement" Version="1.0.2" />
     <PackageReference Include="Discord.Net" Version="3.7.2" />
+    <PackageReference Include="DotNetProjects.WpfToolkit.DataVisualization" Version="6.1.94" />
     <PackageReference Include="GitInfo" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="RoboSharp" Version="1.2.7" />
     <PackageReference Include="SteamWebAPI2" Version="4.3.2" />
     <PackageReference Include="System.Management.Automation" Version="7.2.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Settings.Designer.cs">
+    <Compile Update="DayzCtrlSettings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
+      <DependentUpon>DayzCtrlSettings.settings</DependentUpon>
+    </Compile>
+    <Compile Update="LogParser\LogParserSettings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>LogParserSettings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Settings.settings">
+    <None Update="DayzCtrlSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <LastGenOutput>DayzCtrlSettings.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="LogParser\LogParserSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>LogParserSettings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

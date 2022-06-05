@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using DayZServerControllerUI.CtrlLogic;
+using DayZServerControllerUI.LogParser;
 
 namespace DayZServerControllerUI
 {
@@ -22,7 +23,8 @@ namespace DayZServerControllerUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly MainViewModel _viewModel;
+        private readonly MainViewModel _viewModelMain;
+        private readonly LogParserViewModel _viewModelLogParser;
         private Logging _logger;
 
         public MainWindow()
@@ -30,7 +32,8 @@ namespace DayZServerControllerUI
             InitializeComponent();
 
             _logger = new Logging(TextBoxLogging);
-            _viewModel = new MainViewModel(ref _logger);
+            _viewModelMain = new MainViewModel(ref _logger);
+            _viewModelLogParser = new LogParserViewModel();
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -38,8 +41,13 @@ namespace DayZServerControllerUI
             try
             {
                 // Initialize the logic
-                await _viewModel.Initialize();
-                _viewModel.AttachDiscordBotToLogger(ref _logger);
+                await _viewModelMain.Initialize();
+                _viewModelMain.AttachDiscordBotToLogger(ref _logger);
+                _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
+
+                _viewModelLogParser.Init();
+                UserControlStatistics.Init(_viewModelLogParser);
+                UserControlRankings.Init(_viewModelLogParser);
             }
             catch (IOException ex)
             {
@@ -50,9 +58,9 @@ namespace DayZServerControllerUI
             }
 
             // Check Server Status at Startup
-            if (_viewModel.IsInitialized)
+            if (_viewModelMain.IsInitialized)
             {
-                switch (_viewModel.IsServerRunning)
+                switch (_viewModelMain.IsServerRunning)
                 {
                     case true:
                         LabelServerStatus.Content = $"Running";
@@ -67,6 +75,11 @@ namespace DayZServerControllerUI
                         break;
                 }
             }
+        }
+
+        private void ViewModelMain_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

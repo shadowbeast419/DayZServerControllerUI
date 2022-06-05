@@ -8,7 +8,7 @@ namespace DayZServerControllerUI.CtrlLogic
     public class Logging
     {
         private DiscordBot? _discordBot;
-        private TextBox _textBox;
+        private readonly TextBox _textBox;
 
         public bool MuteDiscordBot { get; set; } = false;
         public bool MuteTextBox { get; set; } = false;
@@ -35,7 +35,7 @@ namespace DayZServerControllerUI.CtrlLogic
                     new Action(() => { _textBox.AppendText(message + Environment.NewLine); }));
             }
 
-            if (!MuteDiscordBot && writeToDiscord)
+            if (_discordBot != null && !MuteDiscordBot && writeToDiscord)
                 await _discordBot.Announce(message);
         }
 

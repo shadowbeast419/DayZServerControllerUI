@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ using DayZServerControllerUI.CtrlLogic;
 
 namespace DayZServerControllerUI
 {
-    internal class MainViewModel
+    internal class MainViewModel : INotifyPropertyChanged
     {
         // SteamId necessary for Workshop-Folder Path
         private const string DayzSteamId = $"221100";
@@ -40,8 +41,9 @@ namespace DayZServerControllerUI
             }
         }
 
-        public event Action ModUpdateDetected;
-        public event Action ServerRestarting;
+        public event Action? ModUpdateDetected;
+        public event Action? ServerRestarting;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainViewModel(ref Logging logger)
         {
@@ -68,7 +70,7 @@ namespace DayZServerControllerUI
         public async Task Initialize()
         {
             FileInfo? discordDataFileInfo = null;
-            string dataFilePath = Settings.Default.DiscordDataFilePath ?? String.Empty;
+            string dataFilePath = DayzCtrlSettings.Default.DiscordDataFilePath ?? String.Empty;
 
             if (File.Exists(dataFilePath))
             {
@@ -76,14 +78,14 @@ namespace DayZServerControllerUI
             }
 
             // Should the Discord Bot be enabled?
-            if (!Settings.Default.MuteDiscordBot && discordDataFileInfo != null)
+            if (!DayzCtrlSettings.Default.MuteDiscordBot && discordDataFileInfo != null)
             {
                 _discordBot = new DiscordBot(new DiscordBotData(discordDataFileInfo));
                 await _discordBot.Init();
             }
 
             // Check DayZ Client Path
-            string dayzClientPath = Settings.Default.DayzGameExePath ?? String.Empty;
+            string dayzClientPath = DayzCtrlSettings.Default.DayzGameExePath ?? String.Empty;
 
             if (!File.Exists(dayzClientPath))
                 throw new IOException($"DayZ-Client Path not valid! ({dayzClientPath})");
@@ -91,7 +93,7 @@ namespace DayZServerControllerUI
             FileInfo? dayzClientInfo = new FileInfo(dayzClientPath);
 
             // Check DayZ Server Path
-            string dayzServerPath = Settings.Default.DayzServerExePath ?? String.Empty;
+            string dayzServerPath = DayzCtrlSettings.Default.DayzServerExePath ?? String.Empty;
 
             if (!File.Exists(dayzServerPath))
                 throw new IOException($"DayZ-Server Path not valid! ({dayzServerPath ?? String.Empty})");
@@ -99,21 +101,21 @@ namespace DayZServerControllerUI
             FileInfo? dayzServerExePath = new FileInfo(dayzServerPath);
 
             // Check Modlist Path
-            string modlistPath = Settings.Default.ModMappingFilePath ?? String.Empty;
+            string modlistPath = DayzCtrlSettings.Default.ModMappingFilePath ?? String.Empty;
 
             if (String.IsNullOrEmpty(modlistPath) || !File.Exists(modlistPath))
                 throw new IOException($"Modlist.txt Path not valid! ({modlistPath})");
 
             // Should SteamCmd be used?
-            bool useSteamCmdForUpdates = Settings.Default.UseSteamCmd;
+            bool useSteamCmdForUpdates = DayzCtrlSettings.Default.UseSteamCmd;
 
             // Init SteamCmd Wrapper
-            string steamCmdPath = Settings.Default.SteamCmdPath ?? String.Empty;
+            string steamCmdPath = DayzCtrlSettings.Default.SteamCmdPath ?? String.Empty;
 
             if (!File.Exists(steamCmdPath))
                 throw new IOException($"SteamCmdPath not valid! ({steamCmdPath})");
 
-            if (dayzClientInfo.Directory != null && dayzServerExePath.Directory != null)
+            if (useSteamCmdForUpdates && dayzClientInfo.Directory != null && dayzServerExePath.Directory != null)
                 _steamCmdWrapper = new SteamCmdWrapper(SteamCmdModeEnum.SteamCmdExe, new FileInfo(steamCmdPath),
                     dayzServerExePath.Directory, dayzClientInfo.Directory);
 
@@ -145,10 +147,10 @@ namespace DayZServerControllerUI
             TimeSpan restartInterval;
 
             // Invalid Restart Interval -> Use default interval
-            if (Settings.Default.ServerRestartPeriodMinutes <= 0)
+            if (DayzCtrlSettings.Default.ServerRestartPeriodMinutes <= 0)
                 restartInterval = DayZServerHelper.DefaultRestartInterval;
             else
-                restartInterval = TimeSpan.FromMinutes(Settings.Default.ServerRestartPeriodMinutes);
+                restartInterval = TimeSpan.FromMinutes(DayzCtrlSettings.Default.ServerRestartPeriodMinutes);
 
             // Init DayZ Server Helper
             _dayZServerHelper = new DayZServerHelper(dayzServerExePath, restartInterval);
@@ -169,7 +171,7 @@ namespace DayZServerControllerUI
         public void StartTimers()
         {
             _restartTimer.Interval =
-                TimeSpan.FromMinutes(Settings.Default.ServerRestartPeriodMinutes).TotalMilliseconds;
+                TimeSpan.FromMinutes(DayzCtrlSettings.Default.ServerRestartPeriodMinutes).TotalMilliseconds;
 
             _modUpdateTimer.Start();
             _restartTimer.Start();

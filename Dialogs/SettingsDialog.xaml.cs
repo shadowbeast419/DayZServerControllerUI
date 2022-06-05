@@ -31,18 +31,18 @@ namespace DayZServerControllerUI.Dialogs
         {
             InitializeComponent();
 
-            _muteDiscordBot = Settings.Default.MuteDiscordBot;
-            _useSteamCmd = Settings.Default.UseSteamCmd;
+            _muteDiscordBot = DayzCtrlSettings.Default.MuteDiscordBot;
+            _useSteamCmd = DayzCtrlSettings.Default.UseSteamCmd;
 
-            _steamCredentialsStorageName = Settings.Default.SteamCredentialStorageName ?? "SteamCredentials";
+            _steamCredentialsStorageName = DayzCtrlSettings.Default.SteamCredentialStorageName ?? "SteamCredentials";
 
             ApplySettingsFromFile();
         }
 
         private void ApplySettingsFromFile()
         {
-            CheckBoxMuteDiscord.IsChecked = Settings.Default.MuteDiscordBot;
-            CheckBoxUseSteamCmd.IsChecked = Settings.Default.UseSteamCmd;
+            CheckBoxMuteDiscord.IsChecked = DayzCtrlSettings.Default.MuteDiscordBot;
+            CheckBoxUseSteamCmd.IsChecked = DayzCtrlSettings.Default.UseSteamCmd;
 
             // Load credentials from Windows Credential Manager
             WindowsCredentials.TryGetExistingCredentials(_steamCredentialsStorageName,
@@ -68,10 +68,10 @@ namespace DayZServerControllerUI.Dialogs
                     _steamCredentialsStorageName, out _);
             }
 
-            Settings.Default.MuteDiscordBot = CheckBoxMuteDiscord.IsChecked ?? false;
-            Settings.Default.UseSteamCmd = CheckBoxUseSteamCmd.IsChecked ?? false;
+            DayzCtrlSettings.Default.MuteDiscordBot = CheckBoxMuteDiscord.IsChecked ?? false;
+            DayzCtrlSettings.Default.UseSteamCmd = CheckBoxUseSteamCmd.IsChecked ?? false;
 
-            Settings.Default.Save();
+            DayzCtrlSettings.Default.Save();
 
             return isSuccess;
         }

@@ -13,11 +13,11 @@ namespace DayZServerControllerUI {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.0.3.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class DayzCtrlSettings : global::System.Configuration.ApplicationSettingsBase {
         
-        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
+        private static DayzCtrlSettings defaultInstance = ((DayzCtrlSettings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new DayzCtrlSettings())));
         
-        public static Settings Default {
+        public static DayzCtrlSettings Default {
             get {
                 return defaultInstance;
             }
