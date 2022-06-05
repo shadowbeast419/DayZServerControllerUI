@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DayZServerControllerUI"
         mc:Ignorable="d"
-        Title="DayZ-Server Controller" Height="336" Width="507" MinHeight="340" MinWidth="500">
+        Title="DayZ-Server Controller" Height="336" Width="507" MinHeight="340" MinWidth="500" Loaded="Window_Loaded">
     <Grid>
         <DockPanel>
             <Menu DockPanel.Dock="Top">
@@ -31,10 +31,10 @@
                             <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
                         <GroupBox Header="Steam Client Status" Grid.Row="0">
-                            <Label Content="Process not detected" Foreground="#FFA02727"/>
+                            <Label Name="LabelSteamStatus" Content="Process not detected" Foreground="#FFA02727"/>
                         </GroupBox>
                         <GroupBox Header="DayZ Server Status" Grid.Row="1">
-                            <Label Content="Process not detected" Foreground="#FFA02727"/>
+                            <Label Name="LabelServerStatus" Content="Process not detected" Foreground="#FFA02727"/>
                         </GroupBox>
                         <GroupBox Header="Control" Grid.Row="2">
                             <Grid>
@@ -69,6 +69,11 @@
                 </TabItem>
                 <TabItem Header="Mods">
                     <Grid Background="#FFE5E5E5"/>
+                </TabItem>
+                <TabItem Header="Logging">
+                    <Grid>
+                        <TextBox Name="TextBoxLogging" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    </Grid>
                 </TabItem>
             </TabControl>
         </DockPanel>

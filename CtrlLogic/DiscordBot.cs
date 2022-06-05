@@ -1,15 +1,10 @@
-﻿using Discord;
+﻿using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace DayZServerController
+namespace DayZServerControllerUI.CtrlLogic
 {
-    internal class DiscordBot
+    public class DiscordBot
     {
         private DiscordSocketClient? _client;
         private DiscordBotData? _botData;

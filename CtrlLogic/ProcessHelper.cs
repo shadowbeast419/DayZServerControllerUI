@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
-namespace DayZServerController
+namespace DayZServerControllerUI.CtrlLogic
 {
     public static class ProcessHelper
     {
@@ -24,7 +24,7 @@ namespace DayZServerController
             return processes.Length;
         }
 
-        public static Task<int> Start(string executablePath, IEnumerable<string> cliArguments)
+        public static Task<int> Start(FileInfo executablePath, IEnumerable<string> cliArguments)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -40,7 +40,7 @@ namespace DayZServerController
 
             Process process = new Process
             {
-                StartInfo = { FileName = executablePath, Arguments = cliArgumentString },
+                StartInfo = { FileName = executablePath.FullName, Arguments = cliArgumentString },
                 EnableRaisingEvents = true
             };
 

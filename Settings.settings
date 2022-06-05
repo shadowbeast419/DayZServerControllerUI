@@ -17,5 +17,17 @@
     <Setting Name="ServerRestartPeriodMinutes" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="MuteDiscordBot" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseSteamCmd" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DiscordDataFilePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SteamCredentialStorageName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">SteamCredentials2</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

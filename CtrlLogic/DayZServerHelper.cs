@@ -1,31 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace DayZServerController
+namespace DayZServerControllerUI.CtrlLogic
 {
     internal class DayZServerHelper
     {
-        private string _dayZExecPath = String.Empty;
-        private string _dayZServerProcName = String.Empty;
-        private int _restartInterval;
-        private System.Timers.Timer _restartTimer;
+        private readonly FileInfo? _dayzServerPath;
+        private readonly string _dayZServerProcName;
+        private readonly int _restartInterval;
+        private readonly System.Timers.Timer? _restartTimer;
         private DateTime? _startTime;
         private bool _timerStoppedManually = false;
 
-        public int ServerPort { get; set; } = 2302;
-        public string ServerConfig { get; set; } = "serverDZ.cfg";
-        public string ProfileFolderName { get; set; } = "Profiles";
+        private int ServerPort { get; set; } = 2302;
+        private string ServerConfig { get; set; } = "serverDZ.cfg";
+        private string ProfileFolderName { get; set; } = "Profiles";
 
-        public bool IsRunning
-        {
-            get
-            {
-                return ProcessHelper.IsRunning(_dayZServerProcName);
-            }
-        }
+
+        public bool IsRunning => ProcessHelper.IsRunning(_dayZServerProcName);
 
         public TimeSpan? TimeUntilNextRestart
         {
@@ -36,7 +31,10 @@ namespace DayZServerController
                 if (!timeOfNextRestart.HasValue)
                     return null;
 
-                return TimeOfNextRestart.Value - DateTime.Now;
+                if (TimeOfNextRestart != null)
+                    return TimeOfNextRestart.Value - DateTime.Now;
+
+                return null;
             }
         }
 
@@ -47,29 +45,34 @@ namespace DayZServerController
                 if (_restartTimer == null || _restartTimer.Enabled == false || !_startTime.HasValue)
                     return null;
 
-               return _startTime.Value + TimeSpan.FromMilliseconds(_restartInterval);
+                return _startTime.Value + TimeSpan.FromMilliseconds(_restartInterval);
             }
         }
 
-        public event Action RestartTimerElapsed; 
+        public static readonly TimeSpan DefaultRestartInterval = TimeSpan.FromHours(4);
 
-        public DayZServerHelper(string pathToDayZExec, string restartIntervalString)
+        public event Action? RestartTimerElapsed; 
+
+        public DayZServerHelper(FileInfo? dayzServerPath, TimeSpan? restartInterval)
         {
-            if (String.IsNullOrEmpty(pathToDayZExec) ||
-                    !File.Exists(pathToDayZExec))
+            if (dayzServerPath == null || !dayzServerPath.Exists)
             {
-                throw new ArgumentException($"No valid name for DayZServer-Executable or path not found! ({pathToDayZExec ?? String.Empty})");
+                string dayzServerPathStr = dayzServerPath != null ? dayzServerPath.FullName : String.Empty;
+
+                throw new ArgumentException($"No valid name for DayZServer-Executable or path not found! ({dayzServerPath})");
             }
 
-            _dayZExecPath = pathToDayZExec;
-            _dayZServerProcName = Path.GetFileNameWithoutExtension(pathToDayZExec);
+            _dayzServerPath = dayzServerPath;
 
-            if (!int.TryParse(restartIntervalString, out int restartInterval) || restartInterval <= 0)
+            // Process Name is the same as the filename without extension
+            _dayZServerProcName = _dayzServerPath.Name.Replace(_dayzServerPath.Extension, String.Empty);
+
+            if (restartInterval == null)
             {
-                throw new ArgumentException($"Invalid Restart-Interval! ({restartIntervalString ?? String.Empty})");
+                throw new ArgumentException($"Invalid Restart-Interval!");
             }
 
-            _restartInterval = restartInterval * 1000;
+            _restartInterval = restartInterval.Value.Milliseconds;
 
             _restartTimer = new System.Timers.Timer();
             _restartTimer.Elapsed += RestartTimer_Elapsed;
@@ -138,7 +141,7 @@ namespace DayZServerController
             Console.WriteLine($"Starting DayZServer with generated CLI-Arguments.");
             Console.WriteLine($"Arguments: {String.Join(' ', cliArguments)}");
 
-            ProcessHelper.Start(_dayZExecPath, cliArguments);
+            ProcessHelper.Start(_dayzServerPath, cliArguments);
         }
 
         public void StartRestartTimer()

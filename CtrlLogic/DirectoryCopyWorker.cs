@@ -1,11 +1,9 @@
-﻿using RoboSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
+using RoboSharp;
 
-namespace DayZServerController
+namespace DayZServerControllerUI.CtrlLogic
 {
     internal class DirectoryCopyWorker : IDisposable
     {

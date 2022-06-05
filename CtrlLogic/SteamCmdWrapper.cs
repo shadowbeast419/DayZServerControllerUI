@@ -1,54 +1,56 @@
-﻿using CredentialManagement;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
+using System.Management.Automation;
+using System.Threading.Tasks;
+using CredentialManagement;
 
-namespace DayZServerController
+namespace DayZServerControllerUI.CtrlLogic
 {
     internal class SteamCmdWrapper
     {
-        public static readonly string DayZGameId = "221100";
-        public static readonly string DayZServerGameId = "223350";
+        private static readonly string DayZGameId = "221100";
+        private static readonly string DayZServerGameId = "223350";
 
         private readonly FileInfo _steamCmdPath;
-        private string _credentialsName = "SteamCredentials2";
         private bool _isInitialized;
         private Credential? _steamCredentials;
 
         // Only for PowerShell Mode
         private PSCredential? _psSteamCredentials;
         private PowerShell? _powerShell;
-        private DirectoryInfo _dayzGameDir;
-        private DirectoryInfo _dayzServerDir;
+        private readonly DirectoryInfo? _dayzGameDir;
+        private readonly DirectoryInfo? _dayzServerDir;
 
-        private List<string> _cliArguments = new();
-        private List<string> _defaultCliStartArguments = new();
-        private List<string> _defaultCliEndArguments = new();
+        private readonly List<string> _cliArguments = new();
+        private readonly List<string> _defaultCliStartArguments = new();
+        private readonly List<string> _defaultCliEndArguments = new();
 
-        public int ModUpdateTasksCount { get; private set; } = 0;
-        public SteamCmdModeEnum SteamCmdMode { get; } = SteamCmdModeEnum.SteamCmdExe;
+        public int ModUpdateTasksCount { get; private set; }
+        public SteamCmdModeEnum SteamCmdMode { get; }
 
+        public bool IsInitialized => _isInitialized;
 
         public SteamCmdWrapper(SteamCmdModeEnum cmdMode = SteamCmdModeEnum.Disabled, FileInfo steamCmdPath = null, 
-            DirectoryInfo dayzServerDir = null, DirectoryInfo dayzGameDir = null)
+            DirectoryInfo? dayzServerDir = null, DirectoryInfo? dayzGameDir = null)
         {
+            SteamCmdMode = SteamCmdModeEnum.SteamCmdExe;
+
             _steamCmdPath = steamCmdPath;
             SteamCmdMode = cmdMode;
             _dayzGameDir = dayzGameDir;
             _dayzServerDir = dayzServerDir;
         }
 
-        public bool Init(string username = null, string password = null)
+        public bool Init(Credential? steamCredentials)
         {
             _isInitialized = false;
 
             if (SteamCmdMode == SteamCmdModeEnum.Disabled)
                 return true;
+
+            if (_dayzGameDir == null || _dayzServerDir == null)
+                return false;
 
             if (!_steamCmdPath.Exists && SteamCmdMode == SteamCmdModeEnum.SteamCmdExe)
                 throw new ArgumentException($"SteamCMD Path not valid!");
@@ -56,18 +58,10 @@ namespace DayZServerController
             if ((!_dayzGameDir.Exists || !_dayzServerDir.Exists) && SteamCmdMode == SteamCmdModeEnum.SteamPowerShellWrapper)
                 throw new ArgumentException($"DayZ game or server directory not valid!");
 
-            if (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))
-            {
-                // Look for an existing password
-                if(!WindowsCredentials.TryGetExistingCredentials(_credentialsName, out _steamCredentials))
-                    return false;
-            }
-            else
-            {
-                // Store a new password
-                if (!WindowsCredentials.SaveCredentials(username, password, _credentialsName, out _steamCredentials))
-                    return false;
-            }
+            if (steamCredentials == null)
+                throw new ArgumentNullException($"No valid Steam Credentials could be read/stored.");
+
+            _steamCredentials = steamCredentials;
 
             switch (SteamCmdMode)
             {
@@ -172,7 +166,7 @@ namespace DayZServerController
                     _cliArguments.InsertRange(0, _defaultCliStartArguments);
                     _cliArguments.InsertRange(_cliArguments.Count, _defaultCliEndArguments);
 
-                    await ProcessHelper.Start(_steamCmdPath.FullName, _cliArguments);
+                    await ProcessHelper.Start(_steamCmdPath, _cliArguments);
 
                     break;
 

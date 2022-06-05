@@ -82,5 +82,53 @@ namespace DayZServerControllerUI {
                 this["ServerRestartPeriodMinutes"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MuteDiscordBot {
+            get {
+                return ((bool)(this["MuteDiscordBot"]));
+            }
+            set {
+                this["MuteDiscordBot"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseSteamCmd {
+            get {
+                return ((bool)(this["UseSteamCmd"]));
+            }
+            set {
+                this["UseSteamCmd"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DiscordDataFilePath {
+            get {
+                return ((string)(this["DiscordDataFilePath"]));
+            }
+            set {
+                this["DiscordDataFilePath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("SteamCredentials2")]
+        public string SteamCredentialStorageName {
+            get {
+                return ((string)(this["SteamCredentialStorageName"]));
+            }
+            set {
+                this["SteamCredentialStorageName"] = value;
+            }
+        }
     }
 }

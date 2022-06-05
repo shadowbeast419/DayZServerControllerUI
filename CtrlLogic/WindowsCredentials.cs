@@ -1,23 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CredentialManagement;
+﻿using CredentialManagement;
 
-namespace DayZServerController
+namespace DayZServerControllerUI.CtrlLogic
 {
     internal static class WindowsCredentials
     {
-        public static bool TryGetExistingCredentials(string credentialName, out Credential? credentials)
+        public static void TryGetExistingCredentials(string credentialName, out Credential? credentials)
         {
             // Look for an existing password
             credentials = GetPassword(credentialName);
-
-            if (credentials == null)
-                return false;
-
-            return true;
         }
 
         public static bool SaveCredentials(string username, string password, string credentialName, out Credential? credentials)

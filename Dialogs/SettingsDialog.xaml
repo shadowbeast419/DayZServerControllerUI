@@ -1,0 +1,38 @@
+﻿<Window x:Class="DayZServerControllerUI.Dialogs.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DayZServerControllerUI.Dialogs"
+        mc:Ignorable="d"
+        Title="Settings" Height="148" Width="422" ResizeMode="NoResize">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <CheckBox Name="CheckBoxUseSteamCmd" Content="Use SteamCMD for Updates" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Click="CheckBoxUseSteamCmd_Click"/>
+        <CheckBox Name="CheckBoxMuteDiscord" Content="Mute Discord-Bot" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Click="CheckBoxMuteDiscord_Click"/>
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Steam Username:" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Label Content="Steam Password:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBox Name="TextBoxSteamUser" Grid.Row="0" Grid.Column="1"/>
+            <PasswordBox Name="TextBoxSteamPassword" Grid.Row="1" Grid.Column="1" Background="#FFA8FFE9"></PasswordBox>
+        </Grid>
+        <Button Name="ButtonSave" Content="Save" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="ButtonSave_Click"></Button>
+        <Button Name="ButtonDiscard" Content="Discard &amp; Close" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="ButtonDiscard_Click"/>
+    </Grid>
+</Window>
