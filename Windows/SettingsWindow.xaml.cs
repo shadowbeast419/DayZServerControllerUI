@@ -1,33 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Authentication;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using CredentialManagement;
 using DayZServerControllerUI.CtrlLogic;
 
-namespace DayZServerControllerUI.Dialogs
+namespace DayZServerControllerUI.Windows
 {
     /// <summary>
-    /// Interaction logic for SettingsDialog.xaml
+    /// Interaction logic for SettingsWindow.xaml
     /// </summary>
-    public partial class SettingsDialog : Window
+    public partial class SettingsWindow : Window
     {
         private bool _muteDiscordBot;
         private bool _useSteamCmd;
         private string _steamCredentialsStorageName;
 
-        public SettingsDialog()
+        public SettingsWindow()
         {
             InitializeComponent();
 
@@ -54,6 +41,11 @@ namespace DayZServerControllerUI.Dialogs
                 TextBoxSteamUser.Text = steamCredentials.Username;
                 TextBoxSteamPassword.Password = steamCredentials.Password;
             }
+
+            UserControlDayzServerPath.SelectedPath = DayzCtrlSettings.Default.DayzServerExePath;
+            UserControlDayzClientPath.SelectedPath = DayzCtrlSettings.Default.DayzGameExePath;
+            UserControlModlistPath.SelectedPath = DayzCtrlSettings.Default.ModMappingFilePath;
+            UserControlSteamCmdPath.SelectedPath = DayzCtrlSettings.Default.SteamCmdPath;
         }
 
         private bool SaveSettingsToFile()
@@ -105,6 +97,26 @@ namespace DayZServerControllerUI.Dialogs
         private void ButtonDiscard_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void ButtonServerPath_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ButtonClientPath_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ButtonModlistPath_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ButtonSteamCmdPath_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

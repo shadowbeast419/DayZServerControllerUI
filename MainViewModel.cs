@@ -10,8 +10,6 @@ using System.Timers;
 using CredentialManagement;
 using DayZServerControllerUI.CtrlLogic;
 
-// ReSharper disable All
-
 namespace DayZServerControllerUI
 {
     internal class MainViewModel : INotifyPropertyChanged
@@ -23,10 +21,10 @@ namespace DayZServerControllerUI
         private SteamCmdWrapper? _steamCmdWrapper;
         private ModManager? _modManager;
         private ModlistReader? _modlistReader;
-        private Logging? _logger;
+        private readonly Logging? _logger;
         private DayZServerHelper? _dayZServerHelper;
-        private Timer _restartTimer;
-        private Timer _modUpdateTimer;
+        private readonly Timer _restartTimer;
+        private readonly Timer _modUpdateTimer;
 
         public bool IsInitialized { get; private set; }
 
@@ -63,6 +61,12 @@ namespace DayZServerControllerUI
             };
 
             _modUpdateTimer.Elapsed += ModUpdateTimer_Elapsed;
+
+            // Paths have to be configured first
+            if (DayzCtrlSettings.Default.FirstStart)
+            {
+
+            }
 
             IsInitialized = false;
         }
@@ -107,17 +111,18 @@ namespace DayZServerControllerUI
                 throw new IOException($"Modlist.txt Path not valid! ({modlistPath})");
 
             // Should SteamCmd be used?
-            bool useSteamCmdForUpdates = DayzCtrlSettings.Default.UseSteamCmd;
+            if (DayzCtrlSettings.Default.UseSteamCmd)
+            {
+                string steamCmdPath = DayzCtrlSettings.Default.SteamCmdPath ?? String.Empty;
 
-            // Init SteamCmd Wrapper
-            string steamCmdPath = DayzCtrlSettings.Default.SteamCmdPath ?? String.Empty;
+                if (!File.Exists(steamCmdPath))
+                    throw new IOException($"SteamCmdPath not valid! ({steamCmdPath})");
 
-            if (!File.Exists(steamCmdPath))
-                throw new IOException($"SteamCmdPath not valid! ({steamCmdPath})");
-
-            if (useSteamCmdForUpdates && dayzClientInfo.Directory != null && dayzServerExePath.Directory != null)
-                _steamCmdWrapper = new SteamCmdWrapper(SteamCmdModeEnum.SteamCmdExe, new FileInfo(steamCmdPath),
-                    dayzServerExePath.Directory, dayzClientInfo.Directory);
+                // Init SteamCmd Wrapper
+                if (dayzClientInfo.Directory != null && dayzServerExePath.Directory != null)
+                    _steamCmdWrapper = new SteamCmdWrapper(SteamCmdModeEnum.SteamCmdExe, new FileInfo(steamCmdPath),
+                        dayzServerExePath.Directory, dayzClientInfo.Directory);
+            }
 
             // Init Mod-Checking-Logic
             _modlistReader = new ModlistReader(new FileInfo(modlistPath));
@@ -125,7 +130,7 @@ namespace DayZServerControllerUI
                 dayzServerExePath, _modlistReader, _steamCmdWrapper);
 
             WindowsCredentials.TryGetExistingCredentials($"SteamCredentials2", out Credential? credentials);
-            bool success = credentials != null;
+            bool success = credentials != null && _steamCmdWrapper != null;
 
             switch (success)
             {
@@ -144,13 +149,10 @@ namespace DayZServerControllerUI
                     break;
             }
 
-            TimeSpan restartInterval;
-
             // Invalid Restart Interval -> Use default interval
-            if (DayzCtrlSettings.Default.ServerRestartPeriodMinutes <= 0)
-                restartInterval = DayZServerHelper.DefaultRestartInterval;
-            else
-                restartInterval = TimeSpan.FromMinutes(DayzCtrlSettings.Default.ServerRestartPeriodMinutes);
+            TimeSpan restartInterval = DayzCtrlSettings.Default.ServerRestartPeriodMinutes <= 0 ? 
+                DayZServerHelper.DefaultRestartInterval : 
+                TimeSpan.FromMinutes(DayzCtrlSettings.Default.ServerRestartPeriodMinutes);
 
             // Init DayZ Server Helper
             _dayZServerHelper = new DayZServerHelper(dayzServerExePath, restartInterval);

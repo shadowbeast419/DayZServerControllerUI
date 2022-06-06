@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Windows\icons8-aktualisieren-24.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="CtrlLogic\" />
   </ItemGroup>
 
@@ -22,9 +26,14 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
     <PackageReference Include="RoboSharp" Version="1.2.7" />
     <PackageReference Include="SteamWebAPI2" Version="4.3.2" />
     <PackageReference Include="System.Management.Automation" Version="7.2.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Windows\icons8-aktualisieren-24.png" />
   </ItemGroup>
 
   <ItemGroup>
