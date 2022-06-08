@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,6 +26,7 @@ namespace DayZServerControllerUI
         private DayZServerHelper? _dayZServerHelper;
         private readonly Timer _restartTimer;
         private readonly Timer _modUpdateTimer;
+        private double _restartPeriodProgress;
 
         public bool IsInitialized { get; private set; }
 
@@ -39,9 +41,25 @@ namespace DayZServerControllerUI
             }
         }
 
+        /// <summary>
+        /// Range from 0 - 100
+        /// </summary>
+        public double RestartPeriodProgress
+        {
+            get => _restartPeriodProgress;
+            set
+            {
+                if (double.IsNaN(value) || value < 0.0d || value > 100.0d)
+                    return;
+
+                _restartPeriodProgress = value;
+                OnPropertyChanged(nameof(RestartPeriodProgress));
+            }
+        }
+
+        public event Action? SettingsWindowNeeded;
         public event Action? ModUpdateDetected;
         public event Action? ServerRestarting;
-        public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainViewModel(ref Logging logger)
         {
@@ -61,12 +79,6 @@ namespace DayZServerControllerUI
             };
 
             _modUpdateTimer.Elapsed += ModUpdateTimer_Elapsed;
-
-            // Paths have to be configured first
-            if (DayzCtrlSettings.Default.FirstStart)
-            {
-
-            }
 
             IsInitialized = false;
         }
@@ -276,6 +288,13 @@ namespace DayZServerControllerUI
 
             await _logger.WriteLineAsync($"Server started! Next restart scheduled: " +
                                          $"{(_dayZServerHelper.TimeOfNextRestart.HasValue ? _dayZServerHelper.TimeOfNextRestart.Value.ToLongTimeString() : String.Empty)}");
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -61,9 +61,9 @@
                                         <ColumnDefinition Width="100"/>
                                     </Grid.ColumnDefinitions>
                                     <Label Content="Restart Period (x Minutes left)" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <ProgressBar x:Name="progressBarRestartPeriod" Height="30" Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom"/>
-                                    <Label x:Name="labelStartTime" Content="StartTimeString" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
-                                    <Label x:Name="labelEndTime" Content="EndTimeString" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+                                    <ProgressBar x:Name="ProgressBarRestartPeriod" Height="30" Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom"/>
+                                    <Label x:Name="LabelStartTime" Content="StartTimeString" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+                                    <Label x:Name="LabelEndTime" Content="EndTimeString" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
                                 </Grid>
                             </Grid>
                         </GroupBox>

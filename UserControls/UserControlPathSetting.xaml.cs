@@ -26,7 +26,6 @@ namespace DayZServerControllerUI.UserControls
     {
         private string _labelText = String.Empty;
         private string _selectedPath = String.Empty;
-        private bool _selectionValid = false;
 
         public string LabelText
         {
@@ -71,7 +70,20 @@ namespace DayZServerControllerUI.UserControls
 
         public bool SelectionValid
         {
-            get => _selectionValid;
+            get
+            {
+                if (String.IsNullOrEmpty(_selectedPath))
+                    return false;
+
+                switch (IsPathADirectory)
+                {
+                    case true:
+                        return Directory.Exists(_selectedPath);
+
+                    case false:
+                        return File.Exists(_selectedPath);
+                }
+            }
             private set
             {
                 switch (value)

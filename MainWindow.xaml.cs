@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using DayZServerControllerUI.CtrlLogic;
 using DayZServerControllerUI.LogParser;
+using DayZServerControllerUI.Windows;
 
 namespace DayZServerControllerUI
 {
@@ -23,17 +24,28 @@ namespace DayZServerControllerUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        private SettingsWindow _settingsWindow;
         private readonly MainViewModel _viewModelMain;
         private readonly LogParserViewModel _viewModelLogParser;
         private Logging _logger;
+        private bool _disableRefresh;
+        private bool _viewModelMainInitialized;
+        private bool _viewModelLogParserInitilized;
 
         public MainWindow()
         {
             InitializeComponent();
 
             _logger = new Logging(TextBoxLogging);
+
             _viewModelMain = new MainViewModel(ref _logger);
+            _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
+
             _viewModelLogParser = new LogParserViewModel();
+            _viewModelLogParser.PropertyChanged += ViewModelLogParser_PropertyChanged;
+            this.DataContext = _viewModelLogParser;
+
+            _settingsWindow = new SettingsWindow();
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -44,10 +56,14 @@ namespace DayZServerControllerUI
                 await _viewModelMain.Initialize();
                 _viewModelMain.AttachDiscordBotToLogger(ref _logger);
                 _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
+                _viewModelMain.ModUpdateDetected += ViewModelMain_ModUpdateDetected;
+                _viewModelMain.ServerRestarting += ViewModelMain_ServerRestarting;
+                _viewModelMainInitialized = true;
 
                 _viewModelLogParser.Init();
                 UserControlStatistics.Init(_viewModelLogParser);
                 UserControlRankings.Init(_viewModelLogParser);
+                _viewModelLogParserInitilized = true;
             }
             catch (IOException ex)
             {
@@ -77,9 +93,50 @@ namespace DayZServerControllerUI
             }
         }
 
+        #region ViewModelLogParser
+
+        private void ViewModelLogParser_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (_disableRefresh || !_viewModelLogParserInitilized)
+                return;
+
+
+        }
+
+        #endregion
+
+        #region ViewModelMain
+
         private void ViewModelMain_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (_disableRefresh || !_viewModelMainInitialized)
+                return;
+
+            _disableRefresh = true;
+
+            switch (e.PropertyName)
+            {
+                case "RestartPeriodProgress":
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        ProgressBarRestartPeriod.Value = _viewModelMain.RestartPeriodProgress;
+                    });
+
+                    break;
+            }
+
+            _disableRefresh = false;
+        }
+        private void ViewModelMain_ServerRestarting()
         {
             throw new NotImplementedException();
         }
+
+        private void ViewModelMain_ModUpdateDetected()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

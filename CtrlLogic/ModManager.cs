@@ -11,8 +11,8 @@ namespace DayZServerControllerUI.CtrlLogic
         public readonly int DayZGameId = 221100;
 
         private readonly DirectoryInfo _workshopModFolder;
-        private readonly DirectoryInfo? _dayzServerFolder;
-        private Dictionary<long, string>? _modListDict = new();
+        private readonly DirectoryInfo _dayzServerFolder;
+        private Dictionary<long, string> _modListDict = new();
 
         // Stores the Workshop Mod Directories as keys and the DayZ-Server Mod Directories as values
         private readonly Dictionary<DirectoryInfo, DirectoryInfo> _workshopServerModFolderDir;
@@ -74,10 +74,7 @@ namespace DayZServerControllerUI.CtrlLogic
         public async Task UpdateModDirsFromModlistAsync()
         {
             Console.WriteLine("Fetching Mods from Modlist...");
-            _modListDict = await _modlistReader.GetModsFromFile();
-
-            if (_modListDict == null)
-                return;
+            _modListDict = await _modlistReader.GetModsFromFile() ?? new Dictionary<long, string>();
 
             Console.WriteLine($"{_modListDict.Count} Mods found in file.");
 
@@ -110,8 +107,12 @@ namespace DayZServerControllerUI.CtrlLogic
         /// Function calls SteamCMD which checks for updates of all mods, FileWatchers detect changes
         /// </summary>
         /// <returns></returns>
+        [Obsolete]
         public async Task<int> DownloadModUpdatesViaSteamAsync()
         {
+            if (_steamCmdWrapper == null || _steamCmdWrapper.SteamCmdMode == SteamCmdModeEnum.Disabled)
+                return 0;
+
             // Watch the Workshop Mod Directories for changes
             _modFileWatchers = new MultipleFileWatchers(_workshopServerModFolderDir.Keys);
 
@@ -133,6 +134,7 @@ namespace DayZServerControllerUI.CtrlLogic
 
             if (_steamCmdWrapper.SteamCmdMode != SteamCmdModeEnum.Disabled)
             {
+                // Force Update either via SteamCMD directly or via PowerShell
                 bool success = await _steamCmdWrapper.ExecuteSteamCmdUpdate();
                 Console.WriteLine($"Closed SteamAPI-process. Success: {success}.");
             }
