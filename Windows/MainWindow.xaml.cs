@@ -1,30 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using DayZServerControllerUI.CtrlLogic;
 using DayZServerControllerUI.LogParser;
-using DayZServerControllerUI.Windows;
 
-namespace DayZServerControllerUI
+namespace DayZServerControllerUI.Windows
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private SettingsWindow _settingsWindow;
         private readonly MainViewModel _viewModelMain;
         private readonly LogParserViewModel _viewModelLogParser;
         private Logging _logger;
@@ -40,16 +27,19 @@ namespace DayZServerControllerUI
 
             _viewModelMain = new MainViewModel(ref _logger);
             _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
+            _viewModelMain.SettingsValidStatusChanged += ViewModelMain_SettingsValidStatusChanged;
 
             _viewModelLogParser = new LogParserViewModel();
             _viewModelLogParser.PropertyChanged += ViewModelLogParser_PropertyChanged;
             this.DataContext = _viewModelLogParser;
-
-            _settingsWindow = new SettingsWindow();
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void ViewModelMain_SettingsValidStatusChanged(bool obj)
         {
+            if (_viewModelMainInitialized || !obj)
+                return;
+
+            // Initialization can now be done with all settings being valid
             try
             {
                 // Initialize the logic
@@ -72,24 +62,27 @@ namespace DayZServerControllerUI
 
                 Close();
             }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (!_viewModelMain.IsInitialized)
+                return;
 
             // Check Server Status at Startup
-            if (_viewModelMain.IsInitialized)
+            switch (_viewModelMain.IsServerRunning)
             {
-                switch (_viewModelMain.IsServerRunning)
-                {
-                    case true:
-                        LabelServerStatus.Content = $"Running";
-                        LabelServerStatus.Foreground = Brushes.YellowGreen;
+                case true:
+                    LabelServerStatus.Content = $"Running";
+                    LabelServerStatus.Foreground = Brushes.YellowGreen;
 
-                        break;
+                    break;
 
-                    case false:
-                        LabelServerStatus.Content = $"Process not detected";
-                        LabelServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(160, 39, 39));
+                case false:
+                    LabelServerStatus.Content = $"Process not detected";
+                    LabelServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(160, 39, 39));
 
-                        break;
-                }
+                    break;
             }
         }
 
@@ -99,8 +92,6 @@ namespace DayZServerControllerUI
         {
             if (_disableRefresh || !_viewModelLogParserInitilized)
                 return;
-
-
         }
 
         #endregion
@@ -138,5 +129,22 @@ namespace DayZServerControllerUI
         }
 
         #endregion
+
+        private void ButtonDiscordLink_OnClick(object sender, RoutedEventArgs e)
+        {
+            // TODO: Refer to Discord-IO Link (http://discord.io/AustrianDayZ)
+            // throw new NotImplementedException();
+        }
+
+        private void ImageButtonDiscordLink_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            // TODO: Scale image properly to the size of the button
+            // throw new NotImplementedException();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            _viewModelMain.Dispose();
+        }
     }
 }

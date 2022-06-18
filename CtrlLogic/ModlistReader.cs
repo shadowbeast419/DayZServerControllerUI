@@ -7,7 +7,7 @@ namespace DayZServerControllerUI.CtrlLogic
 {
     internal class ModlistReader
     {
-        private FileInfo _modlistInfo;
+        private readonly FileInfo _modlistInfo;
 
         public ModlistReader(FileInfo modlistInfo)
         {
@@ -23,28 +23,26 @@ namespace DayZServerControllerUI.CtrlLogic
         /// <returns></returns>
         public async Task<Dictionary<long, string>?> GetModsFromFile()
         {
-            Dictionary<long, string>? modDict = new Dictionary<long, string>();
+            Dictionary<long, string>? modDict = new();
 
-            using(StreamReader sr = new StreamReader(_modlistInfo.FullName))
+            using StreamReader sr = new(_modlistInfo.FullName);
+            while(!sr.EndOfStream)
             {
-                while(!sr.EndOfStream)
-                {
-                    string? modListLine = await sr.ReadLineAsync();
+                string? modListLine = await sr.ReadLineAsync();
 
-                    if (String.IsNullOrEmpty(modListLine))
-                        continue;
+                if (String.IsNullOrEmpty(modListLine))
+                    continue;
 
-                    string[] splittedModListLine = modListLine.Split(',');
+                string[] splittedModListLine = modListLine.Split(',');
 
-                    if (splittedModListLine.Length != 2 || 
-                        String.IsNullOrEmpty(splittedModListLine[0]) || String.IsNullOrEmpty(splittedModListLine[1]))
-                        continue;
+                if (splittedModListLine.Length != 2 || 
+                    String.IsNullOrEmpty(splittedModListLine[0]) || String.IsNullOrEmpty(splittedModListLine[1]))
+                    continue;
 
-                    if (!long.TryParse(splittedModListLine[0], out long workshopID))
-                        continue;
+                if (!Int64.TryParse(splittedModListLine[0], out Int64 workshopID))
+                    continue;
 
-                    modDict.Add(workshopID, splittedModListLine[1]);
-                }
+                modDict.Add(workshopID, splittedModListLine[1]);
             }
 
             return modDict;

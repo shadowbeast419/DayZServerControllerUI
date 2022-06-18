@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DayZServerControllerUI {
+namespace DayZServerControllerUI.Settings {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -140,6 +140,18 @@ namespace DayZServerControllerUI {
             }
             set {
                 this["FirstStart"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DayzServerLogFilePath {
+            get {
+                return ((string)(this["DayzServerLogFilePath"]));
+            }
+            set {
+                this["DayzServerLogFilePath"] = value;
             }
         }
     }

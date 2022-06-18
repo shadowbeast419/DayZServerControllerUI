@@ -8,11 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Windows\AustrianDayzLogo.png" />
+    <None Remove="Windows\DiscordButtonLogo.png" />
     <None Remove="Windows\icons8-aktualisieren-24.png" />
+    <None Remove="Windows\icons8-ok-24.png" />
+    <None Remove="Windows\tape.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="CtrlLogic\" />
+    <Folder Include="ViewModels\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,11 +38,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Windows\AustrianDayzLogo.png" />
+    <Resource Include="Windows\DiscordButtonLogo.png" />
     <Resource Include="Windows\icons8-aktualisieren-24.png" />
+    <Resource Include="Windows\icons8-ok-24.png" />
+    <Resource Include="Windows\tape.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="DayzCtrlSettings.Designer.cs">
+    <Compile Update="Settings\DayzCtrlSettings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
       <DependentUpon>DayzCtrlSettings.settings</DependentUpon>
@@ -50,7 +59,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="DayzCtrlSettings.settings">
+    <None Update="Settings\DayzCtrlSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>DayzCtrlSettings.Designer.cs</LastGenOutput>
     </None>

@@ -9,10 +9,10 @@ namespace DayZServerControllerUI.CtrlLogic
 {
     internal class SteamCmdWrapper
     {
-        private static readonly string DayZGameId = "221100";
-        private static readonly string DayZServerGameId = "223350";
+        private const string DayZGameId = "221100";
+        private const string DayZServerGameId = "223350";
 
-        private readonly FileInfo _steamCmdPath;
+        private readonly FileInfo? _steamCmdPath;
         private bool _isInitialized;
         private Credential? _steamCredentials;
 
@@ -31,7 +31,7 @@ namespace DayZServerControllerUI.CtrlLogic
 
         public bool IsInitialized => _isInitialized;
 
-        public SteamCmdWrapper(SteamCmdModeEnum cmdMode = SteamCmdModeEnum.Disabled, FileInfo steamCmdPath = null, 
+        public SteamCmdWrapper(SteamCmdModeEnum cmdMode = SteamCmdModeEnum.Disabled, FileInfo? steamCmdPath = null, 
             DirectoryInfo? dayzServerDir = null, DirectoryInfo? dayzGameDir = null)
         {
             SteamCmdMode = SteamCmdModeEnum.SteamCmdExe;
@@ -52,7 +52,7 @@ namespace DayZServerControllerUI.CtrlLogic
             if (_dayzGameDir == null || _dayzServerDir == null)
                 return false;
 
-            if (!_steamCmdPath.Exists && SteamCmdMode == SteamCmdModeEnum.SteamCmdExe)
+            if (_steamCmdPath == null || !_steamCmdPath.Exists && SteamCmdMode == SteamCmdModeEnum.SteamCmdExe)
                 throw new ArgumentException($"SteamCMD Path not valid!");
 
             if ((!_dayzGameDir.Exists || !_dayzServerDir.Exists) && SteamCmdMode == SteamCmdModeEnum.SteamPowerShellWrapper)
@@ -109,7 +109,7 @@ namespace DayZServerControllerUI.CtrlLogic
                     _powerShell = PowerShell.Create();
                     _powerShell.AddCommand($"Update-SteamApp");
                     _powerShell.AddParameter("AppID", DayZServerGameId);
-                    _powerShell.AddParameter("Path", _dayzServerDir.Name);
+                    _powerShell.AddParameter("Path", _dayzServerDir?.Name);
                     _powerShell.AddParameter("Credential", _psSteamCredentials);
 
                     await _powerShell.InvokeAsync();
@@ -156,7 +156,7 @@ namespace DayZServerControllerUI.CtrlLogic
 
         public async Task<bool> ExecuteSteamCmdUpdate()
         {
-            if (!_isInitialized || SteamCmdMode == SteamCmdModeEnum.Disabled)
+            if (!_isInitialized || SteamCmdMode == SteamCmdModeEnum.Disabled || _steamCmdPath == null)
                 return true;
 
             switch (SteamCmdMode)
@@ -175,7 +175,7 @@ namespace DayZServerControllerUI.CtrlLogic
                     _powerShell = PowerShell.Create();
                     _powerShell.AddCommand($"Update-SteamApp");
                     _powerShell.AddParameter("AppID", DayZGameId);
-                    _powerShell.AddParameter("Path", _dayzGameDir.Name);
+                    _powerShell.AddParameter("Path", _dayzGameDir?.Name);
                     _powerShell.AddParameter("Credential", _psSteamCredentials);
                     await _powerShell.InvokeAsync();
 

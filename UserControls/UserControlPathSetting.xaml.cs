@@ -22,10 +22,44 @@ namespace DayZServerControllerUI.UserControls
     /// <summary>
     /// Interaction logic for UserControlPathSetting.xaml
     /// </summary>
-    public partial class UserControlPathSetting : UserControl, INotifyPropertyChanged
+    public sealed partial class UserControlPathSetting : INotifyPropertyChanged
     {
         private string _labelText = String.Empty;
         private string _selectedPath = String.Empty;
+        private UserControlPathSettingState _status = UserControlPathSettingState.Disabled;
+
+        /// <summary>
+        /// Defines the appearance of the UserControl depending of the validation of the Path selected with this UserCtrl
+        /// </summary>
+        public UserControlPathSettingState Status
+        {
+            get => _status;
+            set
+            {
+                switch (_status)
+                {
+                    case UserControlPathSettingState.PathInvalid:
+                        BorderOfImage.Background = Brushes.Firebrick;
+                        ImagePathValid.Visibility = Visibility.Visible;
+                        ImagePathValid.Source = new BitmapImage(new Uri(@"/Windows/icons8-aktualisieren-24.png", UriKind.Relative));
+
+                        break;
+                    case UserControlPathSettingState.PathValid:
+                        BorderOfImage.Background = Brushes.Black;
+                        ImagePathValid.Visibility = Visibility.Visible;
+                        ImagePathValid.Source = new BitmapImage(new Uri(@"/Windows/icons8-ok-24.png", UriKind.Relative));
+
+                        break;
+                    case UserControlPathSettingState.Disabled:
+                        BorderOfImage.Background = Brushes.Wheat;
+                        ImagePathValid.Visibility = Visibility.Hidden;
+
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
 
         public string LabelText
         {
@@ -36,6 +70,7 @@ namespace DayZServerControllerUI.UserControls
                     return;
 
                 _labelText = value;
+                LabelPath.Content = _labelText;
                 OnPropertyChanged(LabelText);
             }
         }
@@ -48,73 +83,63 @@ namespace DayZServerControllerUI.UserControls
                 if (String.IsNullOrEmpty(value))
                     return;
 
+
                 _selectedPath = value;
                 OnPropertyChanged(SelectedPath);
 
-                switch (IsPathADirectory)
-                {
-                    case true:
-                        SelectionValid = Directory.Exists(value);
 
-                        break;
-
-                    case false:
-                        SelectionValid = File.Exists(value);
-
-                        break;
-                }
             }
         }
 
-        public bool IsPathADirectory { get; set; }
-
-        public bool SelectionValid
+        /// <summary>
+        /// Checks if the configured path is a valid one and applies the result to the UI (via Status property)
+        /// </summary>
+        private bool IsPathValid
         {
             get
             {
-                if (String.IsNullOrEmpty(_selectedPath))
-                    return false;
+                bool isValidPath;
 
                 switch (IsPathADirectory)
                 {
                     case true:
-                        return Directory.Exists(_selectedPath);
-
-                    case false:
-                        return File.Exists(_selectedPath);
-                }
-            }
-            private set
-            {
-                switch (value)
-                {
-                    case true:
-                        BorderOfImage.Background = Brushes.YellowGreen;
-                        ImagePathValid.Source = new BitmapImage(new Uri(@"/Windows/icons8-ok-24.png", UriKind.Relative));
+                        isValidPath = Directory.Exists(_selectedPath);
 
                         break;
 
                     case false:
-                        BorderOfImage.Background = Brushes.Firebrick;
-                        ImagePathValid.Source = new BitmapImage(new Uri(@"/Windows/icons8-aktualisieren-24.png", UriKind.Relative));
+                        isValidPath = File.Exists(_selectedPath);
 
                         break;
                 }
+
+                Status = isValidPath ? UserControlPathSettingState.PathValid
+                    : UserControlPathSettingState.PathInvalid;
+
+                return isValidPath;
             }
         }
 
-        public event Action? ValidPathSelected;
+        /// <summary>
+        /// Defines whether the target path should be a file or directory
+        /// </summary>
+        public bool IsPathADirectory { get; set; }
+
         public event PropertyChangedEventHandler? PropertyChanged;
+
 
         public UserControlPathSetting()
         {
             InitializeComponent();
 
-            SelectionValid = false;
+            // SettingsWindow is the DataContext
+            DataContext = this.Parent;
+
+            Status = UserControlPathSettingState.PathInvalid;
             IsPathADirectory = true;
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -124,11 +149,15 @@ namespace DayZServerControllerUI.UserControls
             switch (IsPathADirectory)
             {
                 case true:
-                    var folderBrowserDialog = new VistaFolderBrowserDialog();
+                    var folderBrowserDialog = new VistaFolderBrowserDialog
+                    {
+                        Description = LabelText,
+                        UseDescriptionForTitle = true
+                    };
 
                     if (!folderBrowserDialog.ShowDialog().GetValueOrDefault() || !Directory.Exists(folderBrowserDialog.SelectedPath))
                     {
-                        SelectionValid = false;
+                        Status = UserControlPathSettingState.PathInvalid;
                         return;
                     }
 
@@ -137,11 +166,21 @@ namespace DayZServerControllerUI.UserControls
                     break;
 
                 case false:
-                    var fileBrowserDialog = new VistaOpenFileDialog();
+                    var fileBrowserDialog = new VistaOpenFileDialog
+                    {
+                        CheckFileExists = true,
+                        CheckPathExists = true,
+                        ValidateNames = true,
+                        // Only allow log files, text files and executables
+                        Filter = "All allowed Types|*.exe;*.log;*.txt|" + 
+                                 "Text files (*.txt)|*.txt|" +
+                                 "Executables (*.exe)|*.exe|" +
+                                 "Log files (*.log)|*.log"
+                    };
 
                     if (!fileBrowserDialog.ShowDialog().GetValueOrDefault() || !File.Exists(fileBrowserDialog.FileName))
                     {
-                        SelectionValid = false;
+                        Status = UserControlPathSettingState.PathInvalid;
                         return;
                     }
 
@@ -150,8 +189,40 @@ namespace DayZServerControllerUI.UserControls
                     break;
             }
 
-            SelectionValid = true;
-            ValidPathSelected?.Invoke();
+            TextBoxPath.Text = _selectedPath;
+
+            OnPropertyChanged(nameof(SelectedPath));
+            Status = UserControlPathSettingState.PathValid;
+        }
+
+        private void UserControlPathSetting_OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            switch (this.IsEnabled)
+            {
+                case true:
+                    switch (IsPathValid)
+                    {
+                        // UserControl is enabled and the path is valid
+                        case true:
+                            Status = UserControlPathSettingState.PathValid;
+
+                            break;
+                        
+                        // UserControl is enabled and the path is invalid
+                        case false:
+                            Status = UserControlPathSettingState.PathInvalid;
+
+                            break;
+                    }
+
+                    break;
+
+                case false:
+                    // User Control is disabled (doesn't matter if path is valid or not)
+                    Status = UserControlPathSettingState.PathInvalid;
+
+                    break;
+            }
         }
     }
 }

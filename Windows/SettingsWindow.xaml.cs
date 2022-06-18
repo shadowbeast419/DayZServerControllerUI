@@ -4,9 +4,15 @@ using System.Windows.Documents;
 using CredentialManagement;
 using DayZServerControllerUI.CtrlLogic;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Management.Automation.Remoting;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Windows.Controls;
+using DayZServerControllerUI.Annotations;
+using DayZServerControllerUI.Settings;
 using DayZServerControllerUI.UserControls;
 
 namespace DayZServerControllerUI.Windows
@@ -14,32 +20,33 @@ namespace DayZServerControllerUI.Windows
     /// <summary>
     /// Interaction logic for SettingsWindow.xaml
     /// </summary>
-    public partial class SettingsWindow : Window
+    public sealed partial class SettingsWindow : IDisposable, INotifyPropertyChanged
     {
-        private bool _muteDiscordBot;
-        private bool _useSteamCmd;
-        private readonly string _steamCredentialsStorageName;
+        private readonly ServerControlSettingsWrapper _settingsWrapper;
         private readonly List<UserControlPathSetting> _pathUserControls;
-        private bool _selectedPathsValid;
-        private bool _steamCredentialsValid;
 
-        public bool SettingsValid
+        public ServerControlSettingsWrapper SettingsWrapper => _settingsWrapper;
+        public bool AllSettingsValid => _settingsWrapper.SettingsValid;
+
+        // Property for UI Bindings
+        public bool SteamCmdEnabled
         {
-            get
-            {
-                if (_selectedPathsValid && !_useSteamCmd)
-                    return true;
-
-                // Take SteamCredentials Controls into account if SteamCMD Mode is enabled
-                return _useSteamCmd && _steamCredentialsValid && _selectedPathsValid;
-            }
+            get => _settingsWrapper.UseSteamCmd;
+            set => _settingsWrapper.UseSteamCmd = value;
         }
+
+        public event Action? SettingsChangedByUser;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public SettingsWindow()
         {
             InitializeComponent();
 
+            DataContext = this;
+            this.Hide();
+            
             _pathUserControls = new List<UserControlPathSetting>();
+            _settingsWrapper = new ServerControlSettingsWrapper(DayzCtrlSettings.Default.SteamCredentialStorageName ?? "SteamCredentials");
 
             // Get all Path-UserControls by Reflection
             foreach (var member in this.GetType().GetMembers())
@@ -57,108 +64,144 @@ namespace DayZServerControllerUI.Windows
                 if(pathUserCtrl is UserControlPathSetting userControlPathSetting)
                 {
                     _pathUserControls.Add(userControlPathSetting);
-                    userControlPathSetting.ValidPathSelected += UserControlPathSetting_ValidPathSelected;
+                    userControlPathSetting.PropertyChanged += UserControlPathSetting_PropertyChanged;
                 }
             }
 
-            _muteDiscordBot = DayzCtrlSettings.Default.MuteDiscordBot;
-            _useSteamCmd = DayzCtrlSettings.Default.UseSteamCmd;
+            foreach (UserControlPathSetting userCtrl in _pathUserControls)
+            {
+                userCtrl.PropertyChanged += UserCtrlPath_PropertyChanged;
+            }
+            
+            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
 
-            _steamCredentialsStorageName = DayzCtrlSettings.Default.SteamCredentialStorageName ?? "SteamCredentials";
-
-            ApplySettingsFromFile();
+            ApplySettingsToUi();
         }
 
-        private void UserControlPathSetting_ValidPathSelected()
+
+        [NotifyPropertyChangedInvocator]
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
-            // Are all necessary paths valid?
-            switch (_useSteamCmd)
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void UserCtrlPath_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (sender == null || sender is not UserControlPathSetting)
+                return;
+
+            if (String.IsNullOrEmpty(e.PropertyName) || e.PropertyName != "SelectedPath")
+                return;
+
+            // DayZ Server Path
+            if (sender == UserControlDayzServerPath && !String.IsNullOrEmpty(UserControlDayzServerPath.SelectedPath))
             {
-                case true:
-                    // With SteamCmd enabled the path to SteamCmd.exe must also be valid
-                    _selectedPathsValid = _pathUserControls.All(x => x.SelectionValid);
+                _settingsWrapper.DayzServerExePath = new FileInfo(UserControlDayzServerPath.SelectedPath);
+                return;
+            }
 
-                    return;
+            // DayZ Client Path
+            if (sender == UserControlDayzClientPath && !String.IsNullOrEmpty(UserControlDayzClientPath.SelectedPath))
+            {
+                _settingsWrapper.DayzGameExePath = new FileInfo(UserControlDayzClientPath.SelectedPath);
+                return;
+            }
 
-                case false:
-                    _selectedPathsValid = _pathUserControls.Where(x => x != UserControlSteamCmdPath).All(x => x.SelectionValid);
+            // ModMapping.txt File-Path
+            if (sender == UserControlModlistPath && !String.IsNullOrEmpty(UserControlModlistPath.SelectedPath))
+            {
+                _settingsWrapper.ModMappingFilePath = new FileInfo(UserControlModlistPath.SelectedPath);
+                return;
+            }
 
-                    return;
+            // Steam CMD Path
+            if (sender == UserControlSteamCmdPath && !String.IsNullOrEmpty(UserControlSteamCmdPath.SelectedPath))
+            {
+                _settingsWrapper.SteamCmdPath = new FileInfo(UserControlSteamCmdPath.SelectedPath);
+                return;
+            }
+
+            // DiscordInfo.txt Path
+            if (sender == UserControlDiscordFilePath && !String.IsNullOrEmpty(UserControlDiscordFilePath.SelectedPath))
+            {
+                _settingsWrapper.DiscordFilePath = new FileInfo(UserControlDiscordFilePath.SelectedPath);
+                return;
+            }
+
+            // ServerLog.log Path
+            if (sender == UserControlServerLogFilePath && !String.IsNullOrEmpty(UserControlServerLogFilePath.SelectedPath))
+            {
+                _settingsWrapper.DayzServerLogFilePath = new FileInfo(UserControlServerLogFilePath.SelectedPath);
             }
         }
 
-        private void ApplySettingsFromFile()
+        /// <summary>
+        /// This event is called if one of the Path UserControls contain a new path (selected by user)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void UserControlPathSetting_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            CheckBoxMuteDiscord.IsChecked = DayzCtrlSettings.Default.MuteDiscordBot;
-            CheckBoxUseSteamCmd.IsChecked = DayzCtrlSettings.Default.UseSteamCmd;
+            // Notify the MainViewModel of a settings change
+            SettingsChangedByUser?.Invoke();
+        }
 
-            // Load credentials from Windows Credential Manager
-            WindowsCredentials.TryGetExistingCredentials(_steamCredentialsStorageName,
-                out Credential? steamCredentials);
+        private void ApplySettingsToUi()
+        {
+            CheckBoxMuteDiscord.IsChecked = _settingsWrapper.MuteDiscordBot;
+            CheckBoxUseSteamCmd.IsChecked = _settingsWrapper.UseSteamCmd;
 
-            if (steamCredentials != null)
+            if (_settingsWrapper.CredentialsValid && _settingsWrapper.SteamCredentials != null)
             {
                 // Credentials found -> write to TextBoxes
-                TextBoxSteamUser.Text = steamCredentials.Username;
-                PasswordBoxSteamPassword.Password = steamCredentials.Password;
+                TextBoxSteamUser.Text = _settingsWrapper.SteamCredentials.Username;
+                PasswordBoxSteamPassword.Password = _settingsWrapper.SteamCredentials.Password;
             }
 
-            UserControlDayzServerPath.SelectedPath = DayzCtrlSettings.Default.DayzServerExePath;
-            UserControlDayzClientPath.SelectedPath = DayzCtrlSettings.Default.DayzGameExePath;
-            UserControlModlistPath.SelectedPath = DayzCtrlSettings.Default.ModMappingFilePath;
-            UserControlSteamCmdPath.SelectedPath = DayzCtrlSettings.Default.SteamCmdPath;
+            UserControlDayzServerPath.SelectedPath = _settingsWrapper.DayzServerExePath?.FullName;
+            UserControlDayzClientPath.SelectedPath = _settingsWrapper.DayzGameExePath?.FullName;
+            UserControlModlistPath.SelectedPath = _settingsWrapper.ModMappingFilePath?.FullName;
+            UserControlSteamCmdPath.SelectedPath = _settingsWrapper.SteamCmdPath?.FullName;
+            UserControlDiscordFilePath.SelectedPath = _settingsWrapper.DiscordFilePath?.FullName;
+            UserControlServerLogFilePath.SelectedPath = _settingsWrapper.DayzServerLogFilePath?.FullName;
 
-            ButtonSave.IsEnabled = SettingsValid;
-        }
+            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
 
-        private void SaveSettingsToFile()
-        {
-            // Save new Credentials if valid
-            if (_useSteamCmd && _steamCredentialsValid)
-            {
-                bool success = WindowsCredentials.SaveCredentials(TextBoxSteamUser.Text, PasswordBoxSteamPassword.Password,
-                    _steamCredentialsStorageName, out _);
-
-                if (!success)
-                {
-                    _steamCredentialsValid = false;
-                    CheckBoxUseSteamCmd.IsChecked = false;
-
-                    MessageBox.Show($"Unable to store Steam-Credentials to Windows Credential Storage.", $"Error", 
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-
-                    return;
-                }
-            }
-
-            DayzCtrlSettings.Default.MuteDiscordBot = CheckBoxMuteDiscord.IsChecked ?? false;
-            DayzCtrlSettings.Default.UseSteamCmd = CheckBoxUseSteamCmd.IsChecked ?? false;
-
-            DayzCtrlSettings.Default.Save();
+            SettingsChangedByUser?.Invoke();
         }
 
         private void CheckBoxUseSteamCmd_Click(object sender, RoutedEventArgs e)
         {
-            if (_useSteamCmd == CheckBoxUseSteamCmd.IsChecked)
+            if (_settingsWrapper.UseSteamCmd == CheckBoxUseSteamCmd.IsChecked)
                 return;
 
-            _useSteamCmd = CheckBoxUseSteamCmd.IsChecked ?? false;
+            _settingsWrapper.UseSteamCmd = CheckBoxUseSteamCmd.IsChecked ?? false;
 
-            TextBoxSteamUser.IsEnabled = _useSteamCmd;
-            PasswordBoxSteamPassword.IsEnabled = _useSteamCmd;
+            TextBoxSteamUser.IsEnabled = _settingsWrapper.UseSteamCmd;
+            PasswordBoxSteamPassword.IsEnabled = _settingsWrapper.UseSteamCmd;
+
+            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
+
+            OnPropertyChanged(nameof(SteamCmdEnabled));
+            SettingsChangedByUser?.Invoke();
         }
 
         private void CheckBoxMuteDiscord_Click(object sender, RoutedEventArgs e)
         {
-            if (_muteDiscordBot == CheckBoxMuteDiscord.IsChecked)
+            if (_settingsWrapper.MuteDiscordBot == CheckBoxMuteDiscord.IsChecked)
                 return;
 
-            _muteDiscordBot = CheckBoxMuteDiscord.IsChecked ?? false;
+            _settingsWrapper.MuteDiscordBot = CheckBoxMuteDiscord.IsChecked ?? false;
+
+            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
+
+            SettingsChangedByUser?.Invoke();
         }
 
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
-            SaveSettingsToFile();
+            _settingsWrapper.SaveSettingsToFile();
             Hide();
         }
 
@@ -169,18 +212,28 @@ namespace DayZServerControllerUI.Windows
 
         private void TextBoxSteamUser_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            _steamCredentialsValid = !String.IsNullOrEmpty(TextBoxSteamUser.Text) &&
-                                     !String.IsNullOrEmpty(PasswordBoxSteamPassword.Password);
+            if (!String.IsNullOrEmpty(TextBoxSteamUser.Text) &&
+                !String.IsNullOrEmpty(PasswordBoxSteamPassword.Password))
+            {
+                _settingsWrapper.SteamCredentials = new Credential(TextBoxSteamUser.Text, PasswordBoxSteamPassword.Password);
+            }
 
-            ButtonSave.IsEnabled = SettingsValid;
+            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
+
+            SettingsChangedByUser?.Invoke();
         }
 
         private void PasswordBoxSteamPassword_OnPasswordChanged(object sender, RoutedEventArgs e)
         {
-            _steamCredentialsValid = !String.IsNullOrEmpty(TextBoxSteamUser.Text) &&
-                                     !String.IsNullOrEmpty(PasswordBoxSteamPassword.Password);
+            if (!String.IsNullOrEmpty(TextBoxSteamUser.Text) &&
+                !String.IsNullOrEmpty(PasswordBoxSteamPassword.Password))
+            {
+                _settingsWrapper.SteamCredentials = new Credential(TextBoxSteamUser.Text, PasswordBoxSteamPassword.Password);
+            }
+            
+            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
 
-            ButtonSave.IsEnabled = SettingsValid;
+            SettingsChangedByUser?.Invoke();
         }
 
         // Hide Window instead of closing
@@ -188,6 +241,15 @@ namespace DayZServerControllerUI.Windows
         {
             e.Cancel = true;
             Hide();
+        }
+
+        public void Dispose()
+        {
+            // Unsubscribe from events (garbage collection waits for it!)
+            foreach (UserControlPathSetting userCtrl in _pathUserControls)
+            {
+                userCtrl.PropertyChanged -= UserCtrlPath_PropertyChanged;
+            }
         }
     }
 }

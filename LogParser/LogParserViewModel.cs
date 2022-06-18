@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.ComponentModel;
-using System.Timers;
+using System.Linq;
 using System.Threading;
+using System.Timers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -12,7 +12,7 @@ namespace DayZServerControllerUI.LogParser
 {
     public class LogParserViewModel : INotifyPropertyChanged
     {
-        private LogParser _logParser;
+        private DayZServerControllerUI.LogParser.LogParser _logParser;
         private System.Timers.Timer _refreshTimer;
         private readonly List<DayZPlayer> _playerList;
 
@@ -31,7 +31,7 @@ namespace DayZServerControllerUI.LogParser
 
         public void Init()
         {
-            _logParser = new LogParser();
+            _logParser = new DayZServerControllerUI.LogParser.LogParser();
 
             _refreshTimer = new System.Timers.Timer()
             {

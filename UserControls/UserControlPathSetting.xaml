@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DayZServerControllerUI.UserControls"
-             Height="25" Width="Auto">
+             x:Name="UcPath"
+             Height="25" Width="Auto" IsEnabledChanged="UserControlPathSetting_OnIsEnabledChanged">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="120"/>
@@ -13,8 +14,8 @@
             <ColumnDefinition Width="25"/>
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-        <TextBox Grid.Column="1" IsReadOnly="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <Label Name="LabelPath" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+        <TextBox Name="TextBoxPath" Grid.Column="1" IsReadOnly="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         <Border Name="BorderOfImage" Grid.Column="2" Background="Firebrick" Margin="3">
             <Image Name="ImagePathValid" Source="/Windows/icons8-aktualisieren-24.png" Margin="3"/>
         </Border>

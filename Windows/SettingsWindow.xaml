@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DayZServerControllerUI.Windows"
         mc:Ignorable="d"
-        Title="Settings" Height="326" Width="560" Visibility="Visible" Closing="Window_Closing">
+        x:Name="WindowSettings"
+        Title="Settings" Height="340" MaxHeight="340" Width="560" Visibility="Visible" Closing="Window_Closing" Topmost="True" Icon="/Windows/tape.png">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -20,7 +21,7 @@
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="70"/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <CheckBox Name="CheckBoxUseSteamCmd" Content="Use SteamCMD for Updates" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Click="CheckBoxUseSteamCmd_Click"/>
@@ -29,11 +30,11 @@
         <UserControls:UserControlPathSetting Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlDayzServerPath" LabelText="Dayz-Server Path:" IsPathADirectory="False" Height="Auto" Width="Auto"/>
         <UserControls:UserControlPathSetting Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlDayzClientPath" LabelText="Dayz-Client Path:" IsPathADirectory="False" Height="Auto" Width="Auto"/>
         <UserControls:UserControlPathSetting Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlModlistPath" LabelText="Modlist.txt Path:" IsPathADirectory="False" Height="Auto" Width="Auto"/>
-        <UserControls:UserControlPathSetting Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlSteamCmdPath" LabelText="Steam-Cmd Path:" IsPathADirectory="False" Height="Auto" Width="Auto"/>
+        <UserControls:UserControlPathSetting Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlSteamCmdPath" LabelText="Steam-Cmd Path:" IsPathADirectory="False" Height="Auto" Width="Auto" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SettingsWindow}, Path=SteamCmdEnabled}"/>
         <UserControls:UserControlPathSetting Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlDiscordFilePath" LabelText="Discord-File Path:" IsPathADirectory="False" Height="Auto" Width="Auto"/>
-        <UserControls:UserControlPathSetting Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlServerLogFilePath" LabelText="Discord-File Path:" IsPathADirectory="False" Height="Auto" Width="Auto"/>
+        <UserControls:UserControlPathSetting Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" x:Name="UserControlServerLogFilePath" LabelText="ServerLog-File Path:" IsPathADirectory="False" Height="Auto" Width="Auto"/>
 
-        <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+        <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SettingsWindow}, Path=SteamCmdEnabled}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="120"/>
                 <ColumnDefinition Width="*"/>

@@ -1,23 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Timers;
+using System.Windows;
 using CredentialManagement;
 using DayZServerControllerUI.CtrlLogic;
+using DayZServerControllerUI.Settings;
 
-namespace DayZServerControllerUI
+namespace DayZServerControllerUI.Windows
 {
-    internal class MainViewModel : INotifyPropertyChanged
+    internal sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         // SteamId necessary for Workshop-Folder Path
         private const string DayzSteamId = $"221100";
 
+        private readonly SettingsWindow _settingsWindow;
         private DiscordBot? _discordBot;
         private SteamCmdWrapper? _steamCmdWrapper;
         private ModManager? _modManager;
@@ -29,6 +28,7 @@ namespace DayZServerControllerUI
         private double _restartPeriodProgress;
 
         public bool IsInitialized { get; private set; }
+        public ServerControlSettingsWrapper ServerCtrlSettingsWrapper => _settingsWindow.SettingsWrapper;
 
         public bool IsServerRunning
         {
@@ -57,9 +57,10 @@ namespace DayZServerControllerUI
             }
         }
 
-        public event Action? SettingsWindowNeeded;
         public event Action? ModUpdateDetected;
         public event Action? ServerRestarting;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<bool>? SettingsValidStatusChanged;
 
         public MainViewModel(ref Logging logger)
         {
@@ -80,7 +81,26 @@ namespace DayZServerControllerUI
 
             _modUpdateTimer.Elapsed += ModUpdateTimer_Elapsed;
 
+            // Create SettingsWrapper Window, but it is hidden at first
+            _settingsWindow = new SettingsWindow();
+            _settingsWindow.SettingsChangedByUser += SettingsWindow_SettingsChangedByUser;
+
+            // Open SettingsWrapper Window if first startup
+            if (DayzCtrlSettings.Default.FirstStart)
+            {
+                _settingsWindow.Show();
+            }
+
             IsInitialized = false;
+        }
+
+        private void SettingsWindow_SettingsChangedByUser()
+        {
+            // Forward the SettingsChanged event to MainWindow via PropertyChanged Event
+            OnPropertyChanged(nameof(ServerCtrlSettingsWrapper));
+
+            // .. and also tell the MainWindow if all SettingsWrapper are valid
+            SettingsValidStatusChanged?.Invoke(_settingsWindow.AllSettingsValid);
         }
 
         public async Task Initialize()
@@ -155,7 +175,7 @@ namespace DayZServerControllerUI
                 case false:
                     // No credentials, without them SteamCmd-Mode is not possible
                     MessageBox.Show(
-                        $"No Steam Credentials found in Windows Credential Storage. You can save them in the Settings Dialog. SteamCmd-Mode is disabled.",
+                        $"No Steam Credentials found in Windows Credential Storage. You can save them in the SettingsWrapper Dialog. SteamCmd-Mode is disabled.",
                         $"Notification", MessageBoxButton.OK, MessageBoxImage.Information);
 
                     break;
@@ -290,11 +310,14 @@ namespace DayZServerControllerUI
                                          $"{(_dayZServerHelper.TimeOfNextRestart.HasValue ? _dayZServerHelper.TimeOfNextRestart.Value.ToLongTimeString() : String.Empty)}");
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void Dispose()
+        {
+            _settingsWindow.Close();
         }
     }
 }
