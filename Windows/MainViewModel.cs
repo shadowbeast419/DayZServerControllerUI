@@ -25,14 +25,46 @@ namespace DayZServerControllerUI.Windows
         private DayZServerHelper? _dayZServerHelper;
         private readonly Timer _restartTimer;
         private readonly Timer _modUpdateTimer;
+        private bool _isInitialized;
         private double _restartPeriodProgress;
         private bool _modUpdateInProgress;
 
-        public ServerControlSettingsWrapper ServerCtrlSettingsWrapper => _settingsWindow.SettingsWrapper;
+        public ServerControlSettingsWrapper ServerSettings => _settingsWindow.SettingsWrapper;
 
         #region Properties for UI Bindings
 
-        public bool IsInitialized { get; private set; }
+        public bool IsInitialized
+        {
+            get => _isInitialized;
+            private set
+            {
+                if(value)
+                    Initialized?.Invoke();
+
+                _isInitialized = value;
+            }
+        }
+
+        public bool SettingsWindowVisible
+        {
+            get => _settingsWindow.IsVisible;
+            set
+            {
+                switch (value)
+                {
+                    case true:
+                        _settingsWindow.Show();
+
+                        return;
+
+                    case false:
+                        _settingsWindow.Hide();
+
+                        return;
+                }
+            }
+        }
+
         public bool IsServerRunning
         {
             get
@@ -66,9 +98,9 @@ namespace DayZServerControllerUI.Windows
 
         #endregion
 
+        public event Action? Initialized;
         public event Action? ServerRestarting;
         public event PropertyChangedEventHandler? PropertyChanged;
-        public event Action<bool>? SettingsValidStatusChanged;
 
         public MainViewModel(ref Logging logger)
         {
@@ -91,84 +123,67 @@ namespace DayZServerControllerUI.Windows
 
             // Create SettingsWrapper Window, but it is hidden at first
             _settingsWindow = new SettingsWindow();
+        }
 
-            // Open SettingsWrapper Window if first startup
-            if (DayzCtrlSettings.Default.FirstStart)
+        #region Server Control Logic
+
+        private async Task ValidateSettings()
+        {
+            // Open SettingsWrapper Window if first startup or if settings have changed and are not valid
+            if (DayzCtrlSettings.Default.FirstStart || !ServerSettings.SettingsValid)
             {
+                _isInitialized = false;
+
+                _settingsWindow.SaveButtonClicked += SettingsWindow_SaveButtonClicked;
                 _settingsWindow.Show();
+
+                return;
             }
 
-            IsInitialized = false;
+            // Settings are valid, we can start initializing
+            await InitializeServerLogicAsync();
+
+            _isInitialized = true;
+            Initialized?.Invoke();
         }
 
-        private void SettingsWindow_SettingsChangedByUser()
+        private async Task InitializeServerLogicAsync()
         {
-            // Forward the SettingsChanged event to MainWindow via PropertyChanged Event
-            OnPropertyChanged(nameof(ServerCtrlSettingsWrapper));
-
-            // TODO: Use bindings instead of event
-
-            // .. and also tell the MainWindow if all SettingsWrapper are valid
-            SettingsValidStatusChanged?.Invoke(_settingsWindow.AllSettingsValid);
-        }
-
-        public async Task Initialize()
-        {
-            FileInfo? discordDataFileInfo = null;
-            string dataFilePath = DayzCtrlSettings.Default.DiscordDataFilePath ?? String.Empty;
-
-            if (File.Exists(dataFilePath))
-            {
-                discordDataFileInfo = new FileInfo(dataFilePath);
-            }
-
             // Should the Discord Bot be enabled?
-            if (!DayzCtrlSettings.Default.MuteDiscordBot && discordDataFileInfo != null)
+            if (!ServerSettings.MuteDiscordBot && ServerSettings.DiscordFilePath != null)
             {
-                _discordBot = new DiscordBot(new DiscordBotData(discordDataFileInfo));
+                if (ServerSettings.DiscordFilePath == null)
+                    throw new IOException($"Discord-SecretFile Path is empty!");
+
+                _discordBot = new DiscordBot(new DiscordBotData(ServerSettings.DiscordFilePath));
                 await _discordBot.Init();
             }
 
-            // Check DayZ Client Path
-            string dayzClientPath = DayzCtrlSettings.Default.DayzGameExePath ?? String.Empty;
+            if (ServerSettings.DayzGameExePath == null)
+                throw new IOException($"DayZ-Client Path is empty!");
 
-            if (!File.Exists(dayzClientPath))
-                throw new IOException($"DayZ-Client Path not valid! ({dayzClientPath})");
+            if (ServerSettings.DayzServerExePath == null)
+                throw new IOException($"DayZ-Server Path is empty!");
 
-            FileInfo? dayzClientInfo = new FileInfo(dayzClientPath);
-
-            // Check DayZ Server Path
-            string dayzServerPath = DayzCtrlSettings.Default.DayzServerExePath ?? String.Empty;
-
-            if (!File.Exists(dayzServerPath))
-                throw new IOException($"DayZ-Server Path not valid! ({dayzServerPath ?? String.Empty})");
-
-            FileInfo? dayzServerExePath = new FileInfo(dayzServerPath);
-
-            // Check Modlist Path
-            string modlistPath = DayzCtrlSettings.Default.ModMappingFilePath ?? String.Empty;
-
-            if (String.IsNullOrEmpty(modlistPath) || !File.Exists(modlistPath))
-                throw new IOException($"Modlist.txt Path not valid! ({modlistPath})");
+            if (ServerSettings.ModMappingFilePath == null)
+                throw new IOException($"Modlist.txt Path is empty!");
 
             // Should SteamCmd be used?
-            if (DayzCtrlSettings.Default.UseSteamCmd)
+            if (ServerSettings.UseSteamCmd)
             {
-                string steamCmdPath = DayzCtrlSettings.Default.SteamCmdPath ?? String.Empty;
+                if (ServerSettings.SteamCmdPath == null)
+                    throw new IOException($"SteamCmdPath is empty!");
 
-                if (!File.Exists(steamCmdPath))
-                    throw new IOException($"SteamCmdPath not valid! ({steamCmdPath})");
-
+                // TODO: Refactor DirectoryInfo to FileInfo
                 // Init SteamCmd Wrapper
-                if (dayzClientInfo.Directory != null && dayzServerExePath.Directory != null)
-                    _steamCmdWrapper = new SteamCmdWrapper(SteamCmdModeEnum.SteamCmdExe, new FileInfo(steamCmdPath),
-                        dayzServerExePath.Directory, dayzClientInfo.Directory);
+                //_steamCmdWrapper = new SteamCmdWrapper(SteamCmdModeEnum.SteamCmdExe, ServerSettings.SteamCmdPath,
+                //    ServerSettings.DayzServerExePath, ServerSettings.DayzGameExePath);
             }
 
             // Init Mod-Checking-Logic
-            _modlistReader = new ModlistReader(new FileInfo(modlistPath));
-            _modManager = new ModManager(GetSteamWorkshopFolderFromGameExe(dayzClientInfo),
-                dayzServerExePath, _modlistReader, _steamCmdWrapper);
+            _modlistReader = new ModlistReader(ServerSettings.ModMappingFilePath);
+            _modManager = new ModManager(GetSteamWorkshopFolderFromGameExe(ServerSettings.DayzGameExePath),
+                ServerSettings.DayzServerExePath, _modlistReader, _steamCmdWrapper);
 
             WindowsCredentials.TryGetExistingCredentials($"SteamCredentials2", out Credential? credentials);
             bool success = credentials != null && _steamCmdWrapper != null;
@@ -194,24 +209,15 @@ namespace DayZServerControllerUI.Windows
             }
 
             // Invalid Restart Interval -> Use default interval
-            TimeSpan restartInterval = DayzCtrlSettings.Default.ServerRestartPeriodMinutes <= 0 ? 
-                DayZServerHelper.DefaultRestartInterval : 
+            TimeSpan restartInterval = DayzCtrlSettings.Default.ServerRestartPeriodMinutes <= 0 ?
+                DayZServerHelper.DefaultRestartInterval :
                 TimeSpan.FromMinutes(DayzCtrlSettings.Default.ServerRestartPeriodMinutes);
 
             // Init DayZ Server Helper
-            _dayZServerHelper = new DayZServerHelper(dayzServerExePath, restartInterval);
+            _dayZServerHelper = new DayZServerHelper(ServerSettings.DayzServerExePath, restartInterval);
 
             IsInitialized = true;
-        }
-
-        /// <summary>
-        /// Attaches the used DiscordBot to the Logger given as parameter
-        /// </summary>
-        /// <param name="logger"></param>
-        public void AttachDiscordBotToLogger(ref Logging logger)
-        {
-            if(_discordBot != null)
-                logger.AttachDiscordBot(_discordBot);
+            Initialized?.Invoke();
         }
 
         public void StartTimers()
@@ -221,6 +227,30 @@ namespace DayZServerControllerUI.Windows
 
             _modUpdateTimer.Start();
             _restartTimer.Start();
+        }
+
+        #endregion
+
+        #region Helper Functions
+
+        public async Task StartInitializingAsync()
+        {
+            await ValidateSettings();
+        }
+
+        /// <summary>
+        /// Attaches the used DiscordBot to the Logger given as parameter
+        /// </summary>
+        /// <param name="logger"></param>
+        public void AttachDiscordBotToLogger(ref Logging logger)
+        {
+            if (_discordBot != null)
+                logger.AttachDiscordBot(_discordBot);
+        }
+
+        public void ClearPaths()
+        {
+            ServerSettings.ClearPaths();
         }
 
         private DirectoryInfo GetSteamWorkshopFolderFromGameExe(FileInfo? dayzClientExePath)
@@ -249,6 +279,21 @@ namespace DayZServerControllerUI.Windows
                     $"Steam-Workshop folder not found in assumed path! ({dayzWorkshopPath ?? String.Empty})");
 
             return new DirectoryInfo(dayzWorkshopPath);
+        }
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// User has saved new (valid) settings, re-initialize the ServerController
+        /// </summary>
+        private async void SettingsWindow_SaveButtonClicked()
+        {
+            await InitializeServerLogicAsync();
+
+            _isInitialized = true;
+            Initialized?.Invoke();
         }
 
         private async void ModUpdateTimer_Elapsed(object? sender, ElapsedEventArgs e)
@@ -330,6 +375,8 @@ namespace DayZServerControllerUI.Windows
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        #endregion
 
         public void Dispose()
         {

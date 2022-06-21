@@ -26,7 +26,7 @@ namespace DayZServerControllerUI.UserControls
     {
         private string _labelText = String.Empty;
         private string _selectedPath = String.Empty;
-        private UserControlPathSettingState _status = UserControlPathSettingState.Disabled;
+        private UserControlPathSettingState _status;
 
         /// <summary>
         /// Defines the appearance of the UserControl depending of the validation of the Path selected with this UserCtrl
@@ -36,7 +36,7 @@ namespace DayZServerControllerUI.UserControls
             get => _status;
             set
             {
-                switch (_status)
+                switch (value)
                 {
                     case UserControlPathSettingState.PathInvalid:
                         BorderOfImage.Background = Brushes.Firebrick;
@@ -45,7 +45,7 @@ namespace DayZServerControllerUI.UserControls
 
                         break;
                     case UserControlPathSettingState.PathValid:
-                        BorderOfImage.Background = Brushes.Black;
+                        BorderOfImage.Background = Brushes.Transparent;
                         ImagePathValid.Visibility = Visibility.Visible;
                         ImagePathValid.Source = new BitmapImage(new Uri(@"/Windows/icons8-ok-24.png", UriKind.Relative));
 
@@ -58,6 +58,9 @@ namespace DayZServerControllerUI.UserControls
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                _status = value;
+                OnPropertyChanged();
             }
         }
 
@@ -71,7 +74,7 @@ namespace DayZServerControllerUI.UserControls
 
                 _labelText = value;
                 LabelPath.Content = _labelText;
-                OnPropertyChanged(LabelText);
+                OnPropertyChanged();
             }
         }
 
@@ -83,11 +86,8 @@ namespace DayZServerControllerUI.UserControls
                 if (String.IsNullOrEmpty(value))
                     return;
 
-
                 _selectedPath = value;
-                OnPropertyChanged(SelectedPath);
-
-
+                OnPropertyChanged();
             }
         }
 
@@ -155,7 +155,9 @@ namespace DayZServerControllerUI.UserControls
                         UseDescriptionForTitle = true
                     };
 
-                    if (!folderBrowserDialog.ShowDialog().GetValueOrDefault() || !Directory.Exists(folderBrowserDialog.SelectedPath))
+                    folderBrowserDialog.ShowDialog();
+
+                    if (!Directory.Exists(folderBrowserDialog.SelectedPath))
                     {
                         Status = UserControlPathSettingState.PathInvalid;
                         return;
@@ -178,7 +180,9 @@ namespace DayZServerControllerUI.UserControls
                                  "Log files (*.log)|*.log"
                     };
 
-                    if (!fileBrowserDialog.ShowDialog().GetValueOrDefault() || !File.Exists(fileBrowserDialog.FileName))
+                    fileBrowserDialog.ShowDialog();
+
+                    if (!File.Exists(fileBrowserDialog.FileName))
                     {
                         Status = UserControlPathSettingState.PathInvalid;
                         return;
@@ -190,14 +194,13 @@ namespace DayZServerControllerUI.UserControls
             }
 
             TextBoxPath.Text = _selectedPath;
-
-            OnPropertyChanged(nameof(SelectedPath));
             Status = UserControlPathSettingState.PathValid;
+            OnPropertyChanged(nameof(SelectedPath));
         }
 
         private void UserControlPathSetting_OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            switch (this.IsEnabled)
+            switch (IsEnabled)
             {
                 case true:
                     switch (IsPathValid)
@@ -219,10 +222,12 @@ namespace DayZServerControllerUI.UserControls
 
                 case false:
                     // User Control is disabled (doesn't matter if path is valid or not)
-                    Status = UserControlPathSettingState.PathInvalid;
+                    Status = UserControlPathSettingState.Disabled;
 
                     break;
             }
+
+            OnPropertyChanged();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CredentialManagement;
 using DayZServerControllerUI.CtrlLogic;
 using Ookii.Dialogs.Wpf;
@@ -9,9 +10,21 @@ namespace DayZServerControllerUI.Settings
 {
     public class ServerControlSettingsWrapper
     {
+        private enum SelectablePaths
+        {
+            DayzServerExe,
+            DayzGameExe,
+            ModMappingFile,
+            SteamCmd,
+            DiscordFile,
+            DayzServerLogFile
+        }
+
         private readonly string _steamCredentialsStorageName;
         private Credential? _steamCredentials;
-        private readonly List<FileInfo?> _fileInfoList;
+
+        // Stores all by the user selected paths 
+        private readonly Dictionary<SelectablePaths, FileInfo?> _fileInfoList;
         private FileInfo? _dayzServerExePath;
         private FileInfo? _dayzGameExePath;
         private FileInfo? _modMappingFilePath;
@@ -25,37 +38,79 @@ namespace DayZServerControllerUI.Settings
         public FileInfo? DayzServerExePath
         {
             get => _dayzServerExePath;
-            set => _dayzServerExePath = value;
+            set
+            {
+                if (value == null || !value.Exists)
+                    return;
+
+                _fileInfoList[SelectablePaths.DayzServerExe] = value;
+                _dayzServerExePath = value;
+            }
         }
 
         public FileInfo? DayzGameExePath
         {
             get => _dayzGameExePath;
-            set => _dayzGameExePath = value;
+            set
+            {
+                if (value == null || !value.Exists)
+                    return;
+
+                _fileInfoList[SelectablePaths.DayzGameExe] = value;
+                _dayzGameExePath = value;
+            }
         }
 
         public FileInfo? ModMappingFilePath
         {
             get => _modMappingFilePath;
-            set => _modMappingFilePath = value;
+            set
+            {
+                if (value == null || !value.Exists)
+                    return;
+
+                _fileInfoList[SelectablePaths.ModMappingFile] = value;
+                _modMappingFilePath = value;
+            } 
         }
 
         public FileInfo? SteamCmdPath
         {
             get => _steamCmdPath;
-            set => _steamCmdPath = value;
+            set
+            {
+                if (value == null || !value.Exists)
+                    return;
+
+                _fileInfoList[SelectablePaths.SteamCmd] = value;
+                _steamCmdPath = value;
+            }
         }
 
         public FileInfo? DiscordFilePath
         {
             get => _discordFilePath;
-            set => _discordFilePath = value;
+            set
+            {
+                if (value == null || !value.Exists)
+                    return;
+
+                _fileInfoList[SelectablePaths.DiscordFile] = value;
+                _discordFilePath = value;
+            }
         }
 
         public FileInfo? DayzServerLogFilePath
         {
             get => _dayzServerLogFilePath;
-            set => _dayzServerLogFilePath = value;
+            set
+            {
+                if (value == null || !value.Exists)
+                    return;
+
+                _fileInfoList[SelectablePaths.DayzServerLogFile] = value;
+                _dayzServerLogFilePath = value;
+            }
         }
 
         public Credential? SteamCredentials
@@ -86,27 +141,14 @@ namespace DayZServerControllerUI.Settings
                 switch (UseSteamCmd)
                 {
                     case true:
-                        // Take the SteamCmd path into account
-                        foreach (FileInfo? fileInfo in _fileInfoList)
-                        {
-                            if (fileInfo == null)
-                                return false;
-                        }
-
-                        return true;
+                        // Check all paths (including SteamCmd Path)
+                        return _fileInfoList.Values.All(x => x != null && x.Exists);
 
                     case false:
-                        // SteamCmd path is not necessary
-                        foreach (FileInfo? fileInfo in _fileInfoList)
-                        {
-                            if (fileInfo != null && fileInfo == _steamCmdPath)
-                                continue;
 
-                            if (fileInfo == null)
-                                return false;
-                        }
-
-                        return true;
+                        // Check all paths except SteamCmd path
+                        return _fileInfoList.Where(keyValuePair => keyValuePair.Key != SelectablePaths.SteamCmd).ToList().Select(keyValuePair => keyValuePair.Value)
+                            .All(fileInfo => fileInfo != null && fileInfo.Exists);
                 }
             }
         }
@@ -123,8 +165,7 @@ namespace DayZServerControllerUI.Settings
         public ServerControlSettingsWrapper(string steamCredentialsStorageName)
         {
             _steamCredentialsStorageName = steamCredentialsStorageName;
-            _fileInfoList = new List<FileInfo?> { _dayzServerExePath, _dayzGameExePath , _modMappingFilePath , 
-                _steamCmdPath, _discordFilePath , _dayzServerLogFilePath };
+            _fileInfoList = new();
 
             // Load SettingsWrapper / Paths before getting the Property Values of this class instance
             LoadSettingsFromFile();
@@ -140,35 +181,104 @@ namespace DayZServerControllerUI.Settings
 
             LoadSteamCredentials();
 
-            _dayzServerExePath = !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzServerExePath)
-                ? new FileInfo(DayzCtrlSettings.Default.DayzServerExePath)
-                : null;
-
-            _dayzGameExePath = !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzGameExePath)
-                ? new FileInfo(DayzCtrlSettings.Default.DayzGameExePath)
-                : null;
-
-            _modMappingFilePath = !String.IsNullOrEmpty(DayzCtrlSettings.Default.ModMappingFilePath)
-                ? new FileInfo(DayzCtrlSettings.Default.ModMappingFilePath)
-                : null;
-
-            _steamCmdPath = !String.IsNullOrEmpty(DayzCtrlSettings.Default.SteamCmdPath)
-                ? new FileInfo(DayzCtrlSettings.Default.SteamCmdPath)
-                : null;
-
-            _discordFilePath = !String.IsNullOrEmpty(DayzCtrlSettings.Default.DiscordDataFilePath)
-                ? new FileInfo(DayzCtrlSettings.Default.DiscordDataFilePath)
-                : null;
-
-            _dayzServerLogFilePath = !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzServerLogFilePath)
-                ? new FileInfo(DayzCtrlSettings.Default.DayzServerLogFilePath)
-                : null;
+            // Store the FileInfos from the SettingsFile to a Dictionary with all possible SelectablePaths 
+            foreach (SelectablePaths selectablePath in Enum.GetValues(typeof(SelectablePaths)))
+            {
+                _fileInfoList[selectablePath] = GetPathFromSettings(selectablePath);
+            }
         }
 
-        public bool SaveSettingsToFile()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="selectedPath"></param>
+        /// <param name="settingsString"></param>
+        private FileInfo? GetPathFromSettings(SelectablePaths selectedPath)
+        {
+            switch (selectedPath)
+            {
+                case SelectablePaths.DayzServerExe:
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzServerExePath)
+                        ? new FileInfo(DayzCtrlSettings.Default.DayzServerExePath)
+                        : null;
+
+                case SelectablePaths.DayzGameExe:
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzGameExePath)
+                        ? new FileInfo(DayzCtrlSettings.Default.DayzGameExePath)
+                        : null;
+
+                case SelectablePaths.ModMappingFile:
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.ModMappingFilePath)
+                        ? new FileInfo(DayzCtrlSettings.Default.ModMappingFilePath)
+                        : null;
+
+                case SelectablePaths.SteamCmd:
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DiscordDataFilePath)
+                        ? new FileInfo(DayzCtrlSettings.Default.DiscordDataFilePath)
+                        : null;
+
+                case SelectablePaths.DiscordFile:
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzServerLogFilePath)
+                        ? new FileInfo(DayzCtrlSettings.Default.DayzServerLogFilePath)
+                        : null;
+
+                case SelectablePaths.DayzServerLogFile:
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzServerLogFilePath)
+                        ? new FileInfo(DayzCtrlSettings.Default.DayzServerLogFilePath)
+                        : null;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(selectedPath), selectedPath, null);
+            }
+        }
+
+        /// <summary>
+        /// Maps the path to the correct path-setting
+        /// </summary>
+        /// <param name="selectablePath"></param>
+        /// <param name="pathToStore"></param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        private void StorePathToSettings(SelectablePaths selectablePath, FileInfo? pathToStore)
+        {
+            string pathString = pathToStore != null && pathToStore.Exists ? pathToStore.FullName : String.Empty;
+
+            switch (selectablePath)
+            {
+                case SelectablePaths.DayzServerExe:
+                    DayzCtrlSettings.Default.DayzServerExePath = pathString;
+
+                    break;
+                case SelectablePaths.DayzGameExe:
+                    DayzCtrlSettings.Default.DayzGameExePath = pathString;
+
+                    break;
+                case SelectablePaths.ModMappingFile:
+                    DayzCtrlSettings.Default.ModMappingFilePath = pathString;
+
+                    break;
+                case SelectablePaths.SteamCmd:
+                    DayzCtrlSettings.Default.SteamCmdPath = pathString;
+
+                    break;
+                case SelectablePaths.DiscordFile:
+                    DayzCtrlSettings.Default.DiscordDataFilePath = pathString;
+
+                    break;
+                case SelectablePaths.DayzServerLogFile:
+                    DayzCtrlSettings.Default.DayzServerLogFilePath = pathString;
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(selectablePath), selectablePath, null);
+            }
+
+            DayzCtrlSettings.Default.Save();
+        }
+
+        public void SaveSettingsToFile()
         {
             if (!SettingsValid)
-                return false;
+                return;
 
             // Save new Credentials if valid
             if (UseSteamCmd && CredentialsValid)
@@ -179,14 +289,33 @@ namespace DayZServerControllerUI.Settings
 
             DayzCtrlSettings.Default.MuteDiscordBot = MuteDiscordBot;
             DayzCtrlSettings.Default.UseSteamCmd = UseSteamCmd;
-            DayzCtrlSettings.Default.DayzServerExePath = DayzServerExePath?.FullName;
-            DayzCtrlSettings.Default.DayzGameExePath = DayzGameExePath?.FullName;
-            DayzCtrlSettings.Default.ModMappingFilePath = ModMappingFilePath?.FullName;
-            DayzCtrlSettings.Default.DiscordDataFilePath = DiscordFilePath?.FullName;
-            DayzCtrlSettings.Default.DayzServerLogFilePath = DayzServerLogFilePath?.FullName;
-            DayzCtrlSettings.Default.Save();
 
-            return true;
+            // Store the FileInfos in the Settings File
+            foreach (SelectablePaths selectablePath in Enum.GetValues(typeof(SelectablePaths)))
+            {
+                if(_fileInfoList[selectablePath] == null)
+                    continue;
+
+                #pragma warning disable CS8604
+                StorePathToSettings(selectablePath, _fileInfoList[selectablePath]);
+                #pragma warning restore CS8604
+            }
+        }
+
+        /// <summary>
+        /// Clears all paths in the settings file
+        /// </summary>
+        public void ClearPaths()
+        {
+            foreach (SelectablePaths selectablePath in Enum.GetValues(typeof(SelectablePaths)))
+            {
+                if (_fileInfoList[selectablePath] == null)
+                    continue;
+
+                #pragma warning disable CS8604
+                StorePathToSettings(selectablePath, null);
+                #pragma warning restore CS8604
+            }
         }
 
         private void LoadSteamCredentials()

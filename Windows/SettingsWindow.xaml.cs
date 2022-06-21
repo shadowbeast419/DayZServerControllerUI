@@ -24,6 +24,7 @@ namespace DayZServerControllerUI.Windows
     {
         private readonly ServerControlSettingsWrapper _settingsWrapper = new (DayzCtrlSettings.Default.SteamCredentialStorageName ?? "SteamCredentials");
         private readonly List<UserControlPathSetting> _pathUserControls;
+        private bool _allSettingsValid;
 
         public ServerControlSettingsWrapper SettingsWrapper => _settingsWrapper;
 
@@ -33,21 +34,38 @@ namespace DayZServerControllerUI.Windows
         public bool SteamCmdEnabled
         {
             get => _settingsWrapper.UseSteamCmd;
-            set => _settingsWrapper.UseSteamCmd = value;
+            set
+            {
+                _settingsWrapper.UseSteamCmd = value;
+                OnPropertyChanged();
+            }
         }
 
-        public bool AllSettingsValid => _settingsWrapper.SettingsValid;
+        public bool AllSettingsValid
+        {
+            get => _allSettingsValid;
+            private set
+            {
+                _allSettingsValid = value;
+                ButtonSave.IsEnabled = _allSettingsValid;
+            }
+        }
 
         public bool DiscordBotIsEnabled
         {
             // Inverted logic of DiscordBot-Enable applies better to UI
             get => !_settingsWrapper.MuteDiscordBot;
-            set => _settingsWrapper.MuteDiscordBot = !value;
+            set
+            {
+                _settingsWrapper.MuteDiscordBot = !value;
+                OnPropertyChanged();
+            }
         }
 
         #endregion
 
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action? SaveButtonClicked;
 
         public SettingsWindow()
         {
@@ -58,14 +76,12 @@ namespace DayZServerControllerUI.Windows
             
             _pathUserControls = new List<UserControlPathSetting>();
 
+            FieldInfo[] fields = GetType().GetFields(BindingFlags.NonPublic |
+                                                     BindingFlags.Instance);
+
             // Get all Path-UserControls by Reflection
-            foreach (var member in this.GetType().GetMembers())
+            foreach (var fieldInfo in fields)
             {
-                if (member is not FieldInfo)
-                    continue;
-
-                FieldInfo fieldInfo = (FieldInfo)member;
-
                 if (fieldInfo.FieldType != typeof(UserControlPathSetting))
                     continue;
 
@@ -103,46 +119,41 @@ namespace DayZServerControllerUI.Windows
             if (String.IsNullOrEmpty(e.PropertyName) || e.PropertyName != "SelectedPath")
                 return;
 
-            // DayZ Server Path
             if (sender == UserControlDayzServerPath && !String.IsNullOrEmpty(UserControlDayzServerPath.SelectedPath))
             {
+                // DayZ Server Path
                 _settingsWrapper.DayzServerExePath = new FileInfo(UserControlDayzServerPath.SelectedPath);
-                return;
             }
-
-            // DayZ Client Path
-            if (sender == UserControlDayzClientPath && !String.IsNullOrEmpty(UserControlDayzClientPath.SelectedPath))
+            else if (sender == UserControlDayzClientPath && !String.IsNullOrEmpty(UserControlDayzClientPath.SelectedPath))
             {
+                // DayZ Client Path
                 _settingsWrapper.DayzGameExePath = new FileInfo(UserControlDayzClientPath.SelectedPath);
-                return;
             }
-
-            // ModMapping.txt File-Path
-            if (sender == UserControlModlistPath && !String.IsNullOrEmpty(UserControlModlistPath.SelectedPath))
+            else if (sender == UserControlModlistPath && !String.IsNullOrEmpty(UserControlModlistPath.SelectedPath))
             {
+                // ModMapping.txt File-Path
                 _settingsWrapper.ModMappingFilePath = new FileInfo(UserControlModlistPath.SelectedPath);
-                return;
             }
-
-            // Steam CMD Path
-            if (sender == UserControlSteamCmdPath && !String.IsNullOrEmpty(UserControlSteamCmdPath.SelectedPath))
+            else if (sender == UserControlSteamCmdPath && !String.IsNullOrEmpty(UserControlSteamCmdPath.SelectedPath))
             {
+                // Steam CMD Path
                 _settingsWrapper.SteamCmdPath = new FileInfo(UserControlSteamCmdPath.SelectedPath);
-                return;
             }
 
-            // DiscordInfo.txt Path
-            if (sender == UserControlDiscordFilePath && !String.IsNullOrEmpty(UserControlDiscordFilePath.SelectedPath))
+            else if (sender == UserControlDiscordFilePath && !String.IsNullOrEmpty(UserControlDiscordFilePath.SelectedPath))
             {
+                // DiscordInfo.txt Path
                 _settingsWrapper.DiscordFilePath = new FileInfo(UserControlDiscordFilePath.SelectedPath);
-                return;
             }
-
-            // ServerLog.log Path
-            if (sender == UserControlServerLogFilePath && !String.IsNullOrEmpty(UserControlServerLogFilePath.SelectedPath))
+            else if (sender == UserControlServerLogFilePath && !String.IsNullOrEmpty(UserControlServerLogFilePath.SelectedPath))
             {
+                // ServerLog.log Path
                 _settingsWrapper.DayzServerLogFilePath = new FileInfo(UserControlServerLogFilePath.SelectedPath);
             }
+
+            // Check if every path is valid yet
+            AllSettingsValid = _pathUserControls.All(x => x.Status != UserControlPathSettingState.PathInvalid) && _settingsWrapper.SettingsValid;
+            OnPropertyChanged();
         }
 
         /// <summary>
@@ -150,11 +161,10 @@ namespace DayZServerControllerUI.Windows
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        /// <exception cref="NotImplementedException"></exception>
         private void UserControlPathSetting_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             // Notify the MainViewModel of a settings change
-            OnPropertyChanged(nameof(AllSettingsValid));
+            OnPropertyChanged();
         }
 
         private void ApplySettingsToUi()
@@ -176,7 +186,7 @@ namespace DayZServerControllerUI.Windows
             UserControlDiscordFilePath.SelectedPath = _settingsWrapper.DiscordFilePath?.FullName;
             UserControlServerLogFilePath.SelectedPath = _settingsWrapper.DayzServerLogFilePath?.FullName;
 
-            OnPropertyChanged(nameof(AllSettingsValid));
+            OnPropertyChanged();
         }
 
         /// <summary>
@@ -194,7 +204,7 @@ namespace DayZServerControllerUI.Windows
             // Note:
             // Some IsEnabled-Assignments happen implicitly via Bindings to the UseSteamCmd-Property
             UserControlSteamCmdPath.Status = _settingsWrapper.UseSteamCmd ? UserControlPathSettingState.Disabled : UserControlPathSettingState.PathInvalid;
-            OnPropertyChanged(nameof(SteamCmdEnabled));
+            OnPropertyChanged();
         }
 
         private void CheckBoxMuteDiscord_Click(object sender, RoutedEventArgs e)
@@ -205,14 +215,15 @@ namespace DayZServerControllerUI.Windows
             _settingsWrapper.MuteDiscordBot = CheckBoxMuteDiscord.IsChecked ?? false;
 
             // Inform the UI about a possible change
-            OnPropertyChanged(nameof(AllSettingsValid));
-            OnPropertyChanged(nameof(DiscordBotIsEnabled));
+            OnPropertyChanged();
         }
 
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
             _settingsWrapper.SaveSettingsToFile();
             Hide();
+
+            SaveButtonClicked?.Invoke();
         }
 
         private void ButtonDiscard_Click(object sender, RoutedEventArgs e)
@@ -229,7 +240,7 @@ namespace DayZServerControllerUI.Windows
             }
 
             // Inform the UI about a possible change
-            OnPropertyChanged(nameof(AllSettingsValid));
+            OnPropertyChanged();
         }
 
         private void PasswordBoxSteamPassword_OnPasswordChanged(object sender, RoutedEventArgs e)
@@ -241,7 +252,7 @@ namespace DayZServerControllerUI.Windows
             }
 
             // Inform the UI about a possible change
-            OnPropertyChanged(nameof(AllSettingsValid));
+            OnPropertyChanged();
         }
 
         // Hide Window instead of closing

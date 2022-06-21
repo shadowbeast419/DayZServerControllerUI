@@ -14,17 +14,13 @@
     <Grid>
         <DockPanel>
             <Menu DockPanel.Dock="Top">
-                <MenuItem Header="_File">
-                    <MenuItem Header="_Configure Paths..."/>
-                    <MenuItem Header="_Reset Paths"/>
-                </MenuItem>
                 <MenuItem Header="_Settings">
-                    <MenuItem Header="_Configure Paths..."/>
-                    <MenuItem Header="_Reset Paths"/>
+                    <MenuItem Name="MenuItemConfigurePaths" Header="_Configure Paths..." Click="MenuItemConfigurePaths_OnClick"/>
+                    <MenuItem Name="MenuItemResetPaths" Header="_Reset Paths" Click="MenuItemResetPaths_OnClick"/>
                 </MenuItem>
                 <MenuItem Header="_About">
-                    <MenuItem Header="_Configure Paths..."/>
-                    <MenuItem Header="_Reset Paths"/>
+                    <MenuItem Name="MenuItemAbout" Header="_About DayZ-Server Controller" Click="MenuItemAbout_OnClick"/>
+                    <MenuItem Name="MenuItemUsefulLinks" Header="_Useful Links" Click="MenuItemUsefulLinks_OnClick"/>
                 </MenuItem>
             </Menu>
             <TabControl>

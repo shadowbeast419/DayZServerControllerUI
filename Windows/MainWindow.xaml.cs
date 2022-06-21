@@ -16,8 +16,6 @@ namespace DayZServerControllerUI.Windows
         private readonly LogParserViewModel _viewModelLogParser;
         private Logging _logger;
         private bool _disableRefresh;
-        private bool _viewModelMainInitialized;
-        private bool _viewModelLogParserInitilized;
 
         public MainWindow()
         {
@@ -26,33 +24,22 @@ namespace DayZServerControllerUI.Windows
             _logger = new Logging(TextBoxLogging);
 
             _viewModelMain = new MainViewModel(ref _logger);
-            _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
-            _viewModelMain.SettingsValidStatusChanged += ViewModelMain_SettingsValidStatusChanged;
 
             _viewModelLogParser = new LogParserViewModel();
-            _viewModelLogParser.PropertyChanged += ViewModelLogParser_PropertyChanged;
             this.DataContext = _viewModelLogParser;
         }
 
-        private async void ViewModelMain_SettingsValidStatusChanged(bool obj)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_viewModelMainInitialized || !obj)
-                return;
-
-            // Initialization can now be done with all settings being valid
             try
             {
                 // Initialize the logic
-                await _viewModelMain.Initialize();
-                _viewModelMain.AttachDiscordBotToLogger(ref _logger);
-                _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
-                _viewModelMain.ServerRestarting += ViewModelMain_ServerRestarting;
-                _viewModelMainInitialized = true;
+                _viewModelMain.Initialized += ViewModelMain_Initialized;
+                await _viewModelMain.StartInitializingAsync();
 
                 _viewModelLogParser.Init();
                 UserControlStatistics.Init(_viewModelLogParser);
                 UserControlRankings.Init(_viewModelLogParser);
-                _viewModelLogParserInitilized = true;
             }
             catch (IOException ex)
             {
@@ -61,12 +48,6 @@ namespace DayZServerControllerUI.Windows
 
                 Close();
             }
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (!_viewModelMain.IsInitialized)
-                return;
 
             // Check Server Status at Startup
             switch (_viewModelMain.IsServerRunning)
@@ -85,21 +66,31 @@ namespace DayZServerControllerUI.Windows
             }
         }
 
-        #region ViewModelLogParser
+        #region ViewModelLogParser Events
 
         private void ViewModelLogParser_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (_disableRefresh || !_viewModelLogParserInitilized)
+            if (_disableRefresh)
                 return;
         }
 
         #endregion
 
-        #region ViewModelMain
+        #region ViewModelMain Events
+
+        /// <summary>
+        /// Logic has finished initialing, now we can properly take care of the DayZ Server
+        /// </summary>
+        private void ViewModelMain_Initialized()
+        {
+            _viewModelMain.AttachDiscordBotToLogger(ref _logger);
+            _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
+            _viewModelMain.ServerRestarting += ViewModelMain_ServerRestarting;
+        }
 
         private void ViewModelMain_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (_disableRefresh || !_viewModelMainInitialized)
+            if (_disableRefresh || !_viewModelMain.IsInitialized)
                 return;
 
             _disableRefresh = true;
@@ -129,21 +120,38 @@ namespace DayZServerControllerUI.Windows
 
         #endregion
 
+        #region UI Events
+
         private void ButtonDiscordLink_OnClick(object sender, RoutedEventArgs e)
         {
             // TODO: Refer to Discord-IO Link (http://discord.io/AustrianDayZ)
             // throw new NotImplementedException();
         }
 
-        private void ImageButtonDiscordLink_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        private void MenuItemConfigurePaths_OnClick(object sender, RoutedEventArgs e)
         {
-            // TODO: Scale image properly to the size of the button
-            // throw new NotImplementedException();
+            _viewModelMain.SettingsWindowVisible = true;
+        }
+
+        private void MenuItemResetPaths_OnClick(object sender, RoutedEventArgs e)
+        {
+            _viewModelMain.ClearPaths();
+        }
+        private void MenuItemAbout_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void MenuItemUsefulLinks_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _viewModelMain.Dispose();
         }
+
+        #endregion
     }
 }
