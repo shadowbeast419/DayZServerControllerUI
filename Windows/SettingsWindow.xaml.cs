@@ -71,9 +71,9 @@ namespace DayZServerControllerUI.Windows
         {
             InitializeComponent();
 
+            Visibility = Visibility.Hidden;
+
             DataContext = this;
-            this.Hide();
-            
             _pathUserControls = new List<UserControlPathSetting>();
 
             FieldInfo[] fields = GetType().GetFields(BindingFlags.NonPublic |
@@ -221,14 +221,14 @@ namespace DayZServerControllerUI.Windows
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
             _settingsWrapper.SaveSettingsToFile();
-            Hide();
+            Visibility = Visibility.Hidden;
 
             SaveButtonClicked?.Invoke();
         }
 
         private void ButtonDiscard_Click(object sender, RoutedEventArgs e)
         {
-            Hide();
+            Visibility = Visibility.Hidden;
         }
 
         private void TextBoxSteamUser_OnTextChanged(object sender, TextChangedEventArgs e)
@@ -259,6 +259,7 @@ namespace DayZServerControllerUI.Windows
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
+            Visibility = Visibility.Hidden;
             Hide();
         }
 

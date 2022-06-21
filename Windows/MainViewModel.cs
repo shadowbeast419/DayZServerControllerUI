@@ -129,6 +129,8 @@ namespace DayZServerControllerUI.Windows
 
         private async Task ValidateSettings()
         {
+            // TODO: Create property in SettingsWrapper for FirstStart
+
             // Open SettingsWrapper Window if first startup or if settings have changed and are not valid
             if (DayzCtrlSettings.Default.FirstStart || !ServerSettings.SettingsValid)
             {
@@ -178,6 +180,29 @@ namespace DayZServerControllerUI.Windows
                 // Init SteamCmd Wrapper
                 //_steamCmdWrapper = new SteamCmdWrapper(SteamCmdModeEnum.SteamCmdExe, ServerSettings.SteamCmdPath,
                 //    ServerSettings.DayzServerExePath, ServerSettings.DayzGameExePath);
+
+                WindowsCredentials.TryGetExistingCredentials($"SteamCredentials2", out Credential? credentials);
+                bool success = credentials != null && _steamCmdWrapper != null;
+
+                switch (success)
+                {
+                    case true:
+                        // Init SteamCmd, credentials are necessary
+                        if (_steamCmdWrapper == null)
+                            throw new ArgumentNullException($"SteamCmdWrapper is null where it shouldn't be null.");
+
+                        _steamCmdWrapper.Init(credentials);
+
+                        break;
+
+                    case false:
+                        // No credentials, without them SteamCmd-Mode is not possible
+                        MessageBox.Show(
+                            $"No Steam Credentials found in Windows Credential Storage. You can save them in the SettingsWrapper Dialog. SteamCmd-Mode is disabled.",
+                            $"Notification", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        break;
+                }
             }
 
             // Init Mod-Checking-Logic
@@ -185,36 +210,8 @@ namespace DayZServerControllerUI.Windows
             _modManager = new ModManager(GetSteamWorkshopFolderFromGameExe(ServerSettings.DayzGameExePath),
                 ServerSettings.DayzServerExePath, _modlistReader, _steamCmdWrapper);
 
-            WindowsCredentials.TryGetExistingCredentials($"SteamCredentials2", out Credential? credentials);
-            bool success = credentials != null && _steamCmdWrapper != null;
-
-            switch (success)
-            {
-                case true:
-                    // Init SteamCmd, credentials are necessary
-                    if (_steamCmdWrapper == null)
-                        throw new ArgumentNullException($"SteamCmdWrapper is null where it shouldn't be null.");
-
-                    _steamCmdWrapper.Init(credentials);
-
-                    break;
-
-                case false:
-                    // No credentials, without them SteamCmd-Mode is not possible
-                    MessageBox.Show(
-                        $"No Steam Credentials found in Windows Credential Storage. You can save them in the SettingsWrapper Dialog. SteamCmd-Mode is disabled.",
-                        $"Notification", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    break;
-            }
-
-            // Invalid Restart Interval -> Use default interval
-            TimeSpan restartInterval = DayzCtrlSettings.Default.ServerRestartPeriodMinutes <= 0 ?
-                DayZServerHelper.DefaultRestartInterval :
-                TimeSpan.FromMinutes(DayzCtrlSettings.Default.ServerRestartPeriodMinutes);
-
             // Init DayZ Server Helper
-            _dayZServerHelper = new DayZServerHelper(ServerSettings.DayzServerExePath, restartInterval);
+            _dayZServerHelper = new DayZServerHelper(ServerSettings.DayzServerExePath, ServerSettings.RestartInterval);
 
             IsInitialized = true;
             Initialized?.Invoke();
@@ -222,8 +219,7 @@ namespace DayZServerControllerUI.Windows
 
         public void StartTimers()
         {
-            _restartTimer.Interval =
-                TimeSpan.FromMinutes(DayzCtrlSettings.Default.ServerRestartPeriodMinutes).TotalMilliseconds;
+            _restartTimer.Interval = ServerSettings.RestartInterval.TotalMilliseconds;
 
             _modUpdateTimer.Start();
             _restartTimer.Start();

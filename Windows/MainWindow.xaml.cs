@@ -36,10 +36,6 @@ namespace DayZServerControllerUI.Windows
                 // Initialize the logic
                 _viewModelMain.Initialized += ViewModelMain_Initialized;
                 await _viewModelMain.StartInitializingAsync();
-
-                _viewModelLogParser.Init();
-                UserControlStatistics.Init(_viewModelLogParser);
-                UserControlRankings.Init(_viewModelLogParser);
             }
             catch (IOException ex)
             {
@@ -79,13 +75,22 @@ namespace DayZServerControllerUI.Windows
         #region ViewModelMain Events
 
         /// <summary>
-        /// Logic has finished initialing, now we can properly take care of the DayZ Server
+        /// Logic has finished initialing, now we can properly take care of the DayZ Server and LogParsing
         /// </summary>
         private void ViewModelMain_Initialized()
         {
             _viewModelMain.AttachDiscordBotToLogger(ref _logger);
             _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
             _viewModelMain.ServerRestarting += ViewModelMain_ServerRestarting;
+
+            FileInfo? serverLogFile = _viewModelMain.ServerSettings.DayzServerLogFilePath;
+
+            if (serverLogFile == null)
+                throw new ArgumentException($"Server-Log File Path is empty!");
+
+            _viewModelLogParser.Init(serverLogFile);
+            UserControlStatistics.Init(_viewModelLogParser);
+            UserControlRankings.Init(_viewModelLogParser);
         }
 
         private void ViewModelMain_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -128,6 +133,12 @@ namespace DayZServerControllerUI.Windows
             // throw new NotImplementedException();
         }
 
+        private void ButtonServerLink_OnClick(object sender, RoutedEventArgs e)
+        {
+            // TODO: Refer to Server Browser
+            throw new NotImplementedException();
+        }
+
         private void MenuItemConfigurePaths_OnClick(object sender, RoutedEventArgs e)
         {
             _viewModelMain.SettingsWindowVisible = true;
@@ -153,5 +164,7 @@ namespace DayZServerControllerUI.Windows
         }
 
         #endregion
+
+
     }
 }

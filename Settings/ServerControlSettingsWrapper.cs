@@ -31,6 +31,20 @@ namespace DayZServerControllerUI.Settings
         private FileInfo? _steamCmdPath;
         private FileInfo? _discordFilePath;
         private FileInfo? _dayzServerLogFilePath;
+        private TimeSpan? _restartInterval;
+
+        public TimeSpan RestartInterval
+        {
+            get
+            {
+                // Return default value of 4hours if no value has been set
+                if (!_restartInterval.HasValue)
+                    return new TimeSpan(0, 4, 0, 0);
+
+                return _restartInterval.Value;
+            }
+            set => _restartInterval = value;
+        }
 
         public bool MuteDiscordBot { get; set; }
         public bool UseSteamCmd { get; set; }
@@ -178,13 +192,42 @@ namespace DayZServerControllerUI.Settings
         {
             MuteDiscordBot = DayzCtrlSettings.Default.MuteDiscordBot;
             UseSteamCmd = DayzCtrlSettings.Default.UseSteamCmd;
+            RestartInterval = DayzCtrlSettings.Default.ServerRestartPeriod;
 
             LoadSteamCredentials();
 
             // Store the FileInfos from the SettingsFile to a Dictionary with all possible SelectablePaths 
             foreach (SelectablePaths selectablePath in Enum.GetValues(typeof(SelectablePaths)))
             {
-                _fileInfoList[selectablePath] = GetPathFromSettings(selectablePath);
+                switch (selectablePath)
+                {
+                    case SelectablePaths.DayzServerExe:
+                        DayzServerExePath = GetPathFromSettings(selectablePath);
+
+                        break;
+                    case SelectablePaths.DayzGameExe:
+                        DayzGameExePath = GetPathFromSettings(selectablePath);
+
+                        break;
+                    case SelectablePaths.ModMappingFile:
+                        ModMappingFilePath = GetPathFromSettings(selectablePath);
+
+                        break;
+                    case SelectablePaths.SteamCmd:
+                        SteamCmdPath = GetPathFromSettings(selectablePath);
+
+                        break;
+                    case SelectablePaths.DiscordFile:
+                        DiscordFilePath = GetPathFromSettings(selectablePath);
+
+                        break;
+                    case SelectablePaths.DayzServerLogFile:
+                        DayzServerLogFilePath = GetPathFromSettings(selectablePath);
+
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
 
@@ -213,13 +256,13 @@ namespace DayZServerControllerUI.Settings
                         : null;
 
                 case SelectablePaths.SteamCmd:
-                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DiscordDataFilePath)
-                        ? new FileInfo(DayzCtrlSettings.Default.DiscordDataFilePath)
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.SteamCmdPath)
+                        ? new FileInfo(DayzCtrlSettings.Default.SteamCmdPath)
                         : null;
 
                 case SelectablePaths.DiscordFile:
-                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DayzServerLogFilePath)
-                        ? new FileInfo(DayzCtrlSettings.Default.DayzServerLogFilePath)
+                    return !String.IsNullOrEmpty(DayzCtrlSettings.Default.DiscordDataFilePath)
+                        ? new FileInfo(DayzCtrlSettings.Default.DiscordDataFilePath)
                         : null;
 
                 case SelectablePaths.DayzServerLogFile:
@@ -289,6 +332,7 @@ namespace DayZServerControllerUI.Settings
 
             DayzCtrlSettings.Default.MuteDiscordBot = MuteDiscordBot;
             DayzCtrlSettings.Default.UseSteamCmd = UseSteamCmd;
+            DayzCtrlSettings.Default.ServerRestartPeriod = RestartInterval;
 
             // Store the FileInfos in the Settings File
             foreach (SelectablePaths selectablePath in Enum.GetValues(typeof(SelectablePaths)))

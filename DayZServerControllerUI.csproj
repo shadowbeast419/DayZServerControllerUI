@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <Folder Include="CtrlLogic\" />
-    <Folder Include="ViewModels\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,21 +59,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>DayzCtrlSettings.settings</DependentUpon>
     </Compile>
-    <Compile Update="LogParser\LogParserSettings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>LogParserSettings.settings</DependentUpon>
-    </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Settings\DayzCtrlSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>DayzCtrlSettings.Designer.cs</LastGenOutput>
-    </None>
-    <None Update="LogParser\LogParserSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>LogParserSettings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

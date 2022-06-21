@@ -8,7 +8,7 @@ namespace DayZServerControllerUI.LogParser.UserControls
     /// <summary>
     /// Interaction logic for UserControlPlayerStatistics.xaml
     /// </summary>
-    public partial class UserControlPlayerStatistics : UserControl
+    public partial class UserControlPlayerStatistics
     {
         private LogParserViewModel? _viewModel;
 

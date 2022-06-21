@@ -10,7 +10,7 @@ namespace DayZServerControllerUI.CtrlLogic
     {
         private readonly FileInfo? _dayzServerPath;
         private readonly string _dayZServerProcName;
-        private readonly int _restartInterval;
+        private readonly TimeSpan _restartInterval;
         private readonly System.Timers.Timer _restartTimer;
         private DateTime? _startTime;
         private bool _timerStoppedManually = false;
@@ -42,10 +42,10 @@ namespace DayZServerControllerUI.CtrlLogic
         {
             get
             {
-                if (_restartTimer == null || _restartTimer.Enabled == false || !_startTime.HasValue)
+                if (_restartTimer.Enabled == false || !_startTime.HasValue)
                     return null;
 
-                return _startTime.Value + TimeSpan.FromMilliseconds(_restartInterval);
+                return _startTime.Value + _restartInterval;
             }
         }
 
@@ -57,12 +57,12 @@ namespace DayZServerControllerUI.CtrlLogic
         {
             if (dayzServerPath == null || !dayzServerPath.Exists)
             {
-                string dayzServerPathStr = dayzServerPath != null ? dayzServerPath.FullName : String.Empty;
-
-                throw new ArgumentException($"No valid name for DayZServer-Executable or path not found! ({dayzServerPath})");
+                throw new ArgumentException($"No valid name for DayZServer-Executable or path not found! " +
+                                            $"({(dayzServerPath != null ? dayzServerPath.FullName : String.Empty)})");
             }
 
             _dayzServerPath = dayzServerPath;
+            _restartInterval = restartInterval ?? DefaultRestartInterval;
 
             // Process Name is the same as the filename without extension
             _dayZServerProcName = _dayzServerPath.Name.Replace(_dayzServerPath.Extension, String.Empty);
@@ -72,11 +72,9 @@ namespace DayZServerControllerUI.CtrlLogic
                 throw new ArgumentException($"Invalid Restart-Interval!");
             }
 
-            _restartInterval = restartInterval.Value.Milliseconds;
-
             _restartTimer = new System.Timers.Timer();
             _restartTimer.Elapsed += RestartTimer_Elapsed;
-            _restartTimer.Interval = _restartInterval;
+            _restartTimer.Interval = _restartInterval.TotalMilliseconds;
             _restartTimer.AutoReset = true;
         }
 

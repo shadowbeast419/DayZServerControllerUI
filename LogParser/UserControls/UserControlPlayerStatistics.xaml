@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DayZServerControllerUI.LogParser"
              xmlns:DVC="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=DotNetProjects.DataVisualization.Toolkit"
+             xmlns:userControls="clr-namespace:DayZServerControllerUI.LogParser.UserControls"
              d:DataContext="{d:DesignInstance Type=local:LogParserViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -26,7 +27,7 @@
                    LegendTitle="Legend">
             <DVC:Chart.Series>
                 <DVC:ColumnSeries  Title="Online Time [mins]"    
-                                   IndependentValueBinding="{Binding Path=Key}"
+                                   IndependentValueBinding="{{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=userControls:UserControlPlayerStatistics}, Path=, UpdateSourceTrigger=PropertyChanged}}"
                                    DependentValueBinding="{Binding Path=Value}">
                 </DVC:ColumnSeries>
             </DVC:Chart.Series>

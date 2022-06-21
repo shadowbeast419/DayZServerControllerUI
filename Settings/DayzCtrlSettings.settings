@@ -1,39 +1,39 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="DayZServerControllerUI" GeneratedClassName="DayzCtrlSettings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="DayZServerControllerUI.Settings" GeneratedClassName="DayzCtrlSettings">
   <Profiles />
   <Settings>
     <Setting Name="SteamCmdPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ModMappingFilePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">D:\SharedFolder\DayZServer\Modlist.txt</Value>
     </Setting>
     <Setting Name="DayzServerExePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">D:\SharedFolder\DayZServer\DayZServer_x64.exe</Value>
     </Setting>
     <Setting Name="DayzGameExePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">F:\Program Files (x86)\Steam\steamapps\common\DayZ\DayZ_x64.exe</Value>
     </Setting>
-    <Setting Name="ServerRestartPeriodMinutes" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+    <Setting Name="ServerRestartPeriod" Type="System.TimeSpan" Scope="User">
+      <Value Profile="(Default)">04:00:00</Value>
     </Setting>
     <Setting Name="MuteDiscordBot" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="UseSteamCmd" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="DiscordDataFilePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">D:\SharedFolder\discord.txt</Value>
     </Setting>
     <Setting Name="SteamCredentialStorageName" Type="System.String" Scope="User">
       <Value Profile="(Default)">SteamCredentials2</Value>
     </Setting>
     <Setting Name="FirstStart" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="DayzServerLogFilePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">D:\SharedFolder\DayZServer\Profiles\server_console.log</Value>
     </Setting>
   </Settings>
 </SettingsFile>

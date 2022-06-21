@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 
+// Fixtures
+
+
 namespace DayZServerControllerUI.LogParser
 {
     public class LoggingDbContext : DbContext

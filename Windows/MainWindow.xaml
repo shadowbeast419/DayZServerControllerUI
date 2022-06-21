@@ -69,13 +69,14 @@
                         </GroupBox>
                         <Grid Grid.Row="3" Grid.Column="0">
                             <Grid.Resources>
-                                <ImageBrush x:Key="ImageButtonDiscordLink" ImageSource="/Windows/AustrianDayZDiscordLogo.png" Stretch="UniformToFill"/>
+                                <ImageBrush x:Key="ImageButtonDiscordLink" ImageSource="/Windows/AustrianDayZDiscordLogo.png" Stretch="Fill"/>
+                                <ImageBrush x:Key="ImageButtonServerLink" ImageSource="/Windows/AustrianDayzLogo.png" Stretch="Uniform"/>
                             </Grid.Resources>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Grid.Row="0" Source="/Windows/AustrianDayzLogo.png"/>
+                            <Button Grid.Column="0" Grid.Row="0" Name="ButtonServerLink" Click="ButtonServerLink_OnClick" Background="{StaticResource ImageButtonServerLink}"/>
                             <Button Grid.Column="1" Grid.Row="0" Name="ButtonDiscordLink" Click="ButtonDiscordLink_OnClick" Background="{StaticResource ImageButtonDiscordLink}"/>
                         </Grid>
                     </Grid>

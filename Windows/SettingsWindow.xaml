@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DayZServerControllerUI.Windows"
         mc:Ignorable="d"
         x:Name="WindowSettings"
-        Title="Settings" Height="340" MaxHeight="340" Width="560" Visibility="Visible" Closing="Window_Closing" Topmost="True" Icon="/Windows/tape.png">
+        Title="Settings" Height="340" MaxHeight="340" Width="560" Closing="Window_Closing" Topmost="True" Icon="/Windows/tape.png" ShowInTaskbar="False" Visibility="Hidden">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>

@@ -2,24 +2,27 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Timers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Timer = System.Timers.Timer;
 
 namespace DayZServerControllerUI.LogParser
 {
     public class LogParserViewModel : INotifyPropertyChanged
     {
-        private DayZServerControllerUI.LogParser.LogParser _logParser;
-        private System.Timers.Timer _refreshTimer;
+        private LogParser? _logParser;
+        private Timer? _refreshTimer;
         private readonly List<DayZPlayer> _playerList;
+        private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(10);
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public ObservableCollection<LogLine> LogLines { get; set; }
-        public ObservableCollection<PlayerStatistics> OnlineStatistics { get; set; }
+        private ObservableCollection<LogLine> LogLines { get; }
+        public ObservableCollection<PlayerStatistics> OnlineStatistics { get; init; }
 
         public LogParserViewModel()
         {
@@ -29,13 +32,13 @@ namespace DayZServerControllerUI.LogParser
             OnlineStatistics = new ObservableCollection<PlayerStatistics>();
         }
 
-        public void Init()
+        public void Init(FileInfo serverLogFile)
         {
-            _logParser = new DayZServerControllerUI.LogParser.LogParser();
+            _logParser = new LogParser(serverLogFile);
 
             _refreshTimer = new System.Timers.Timer()
             {
-                Interval = 30000.0,
+                Interval = _refreshInterval.TotalMilliseconds,
                 AutoReset = true
             };
 
@@ -48,7 +51,7 @@ namespace DayZServerControllerUI.LogParser
 
         private async void RefreshTimer_Elapsed(object? sender, ElapsedEventArgs? e)
         {
-            List<LogLine> newLogLines = await _logParser.GetNewLogLines();
+            List<LogLine> newLogLines = _logParser?.ParseNew() ?? throw new InvalidOperationException();
 
             if (newLogLines.Count == 0)
                 return;

@@ -37,7 +37,7 @@ namespace DayZServerControllerUI.Settings {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("D:\\SharedFolder\\DayZServer\\Modlist.txt")]
         public string ModMappingFilePath {
             get {
                 return ((string)(this["ModMappingFilePath"]));
@@ -49,7 +49,7 @@ namespace DayZServerControllerUI.Settings {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("D:\\SharedFolder\\DayZServer\\DayZServer_x64.exe")]
         public string DayzServerExePath {
             get {
                 return ((string)(this["DayzServerExePath"]));
@@ -61,7 +61,7 @@ namespace DayZServerControllerUI.Settings {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("F:\\Program Files (x86)\\Steam\\steamapps\\common\\DayZ\\DayZ_x64.exe")]
         public string DayzGameExePath {
             get {
                 return ((string)(this["DayzGameExePath"]));
@@ -73,19 +73,19 @@ namespace DayZServerControllerUI.Settings {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int ServerRestartPeriodMinutes {
+        [global::System.Configuration.DefaultSettingValueAttribute("04:00:00")]
+        public global::System.TimeSpan ServerRestartPeriod {
             get {
-                return ((int)(this["ServerRestartPeriodMinutes"]));
+                return ((global::System.TimeSpan)(this["ServerRestartPeriod"]));
             }
             set {
-                this["ServerRestartPeriodMinutes"] = value;
+                this["ServerRestartPeriod"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool MuteDiscordBot {
             get {
                 return ((bool)(this["MuteDiscordBot"]));
@@ -109,7 +109,7 @@ namespace DayZServerControllerUI.Settings {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("D:\\SharedFolder\\discord.txt")]
         public string DiscordDataFilePath {
             get {
                 return ((string)(this["DiscordDataFilePath"]));
@@ -133,7 +133,7 @@ namespace DayZServerControllerUI.Settings {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool FirstStart {
             get {
                 return ((bool)(this["FirstStart"]));
@@ -145,7 +145,7 @@ namespace DayZServerControllerUI.Settings {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("D:\\SharedFolder\\DayZServer\\Profiles\\server_console.log")]
         public string DayzServerLogFilePath {
             get {
                 return ((string)(this["DayzServerLogFilePath"]));
