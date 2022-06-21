@@ -127,7 +127,7 @@ namespace DayZServerControllerUI.LogParser
             set => _primaryKey = value;
         }
 
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         public LogLine()
         {

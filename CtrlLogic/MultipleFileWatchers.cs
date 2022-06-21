@@ -48,11 +48,10 @@ namespace DayZServerControllerUI.CtrlLogic
             {
                 // Create the FileInfo object only when needed to ensure
                 // the information is as current as possible.
-                FileInfo fi = null;
 
                 try
                 {
-                    fi = new FileInfo(file);
+                    var fi = new FileInfo(file);
                     fileInfos.Add(fi);
                 }
                 catch (FileNotFoundException e)
@@ -92,8 +91,8 @@ namespace DayZServerControllerUI.CtrlLogic
                 // Compare each start file with every end file
                 foreach (FileInfo fileInfoEnd in endDir)
                 {
-                    string parentDirStart = new DirectoryInfo(fileInfoStart.FullName).Parent.Name;
-                    string parentDirEnd = new DirectoryInfo(fileInfoEnd.FullName).Parent.Name;
+                    string? parentDirStart = new DirectoryInfo(fileInfoStart.FullName).Parent?.Name;
+                    string? parentDirEnd = new DirectoryInfo(fileInfoEnd.FullName).Parent?.Name;
 
                     // Has the filesize changed? (Take into account that there can mulitple files with the same name in different dirs)
                     if (fileInfoStart.Name == fileInfoEnd.Name && parentDirStart == parentDirEnd && fileInfoStart.Length != fileInfoEnd.Length)

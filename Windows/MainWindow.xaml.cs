@@ -46,7 +46,6 @@ namespace DayZServerControllerUI.Windows
                 await _viewModelMain.Initialize();
                 _viewModelMain.AttachDiscordBotToLogger(ref _logger);
                 _viewModelMain.PropertyChanged += ViewModelMain_PropertyChanged;
-                _viewModelMain.ModUpdateDetected += ViewModelMain_ModUpdateDetected;
                 _viewModelMain.ServerRestarting += ViewModelMain_ServerRestarting;
                 _viewModelMainInitialized = true;
 

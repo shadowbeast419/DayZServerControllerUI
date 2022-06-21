@@ -26,10 +26,13 @@ namespace DayZServerControllerUI.Windows
         private readonly Timer _restartTimer;
         private readonly Timer _modUpdateTimer;
         private double _restartPeriodProgress;
+        private bool _modUpdateInProgress;
 
-        public bool IsInitialized { get; private set; }
         public ServerControlSettingsWrapper ServerCtrlSettingsWrapper => _settingsWindow.SettingsWrapper;
 
+        #region Properties for UI Bindings
+
+        public bool IsInitialized { get; private set; }
         public bool IsServerRunning
         {
             get
@@ -40,7 +43,6 @@ namespace DayZServerControllerUI.Windows
                 return _dayZServerHelper.IsRunning;
             }
         }
-
         /// <summary>
         /// Range from 0 - 100
         /// </summary>
@@ -57,7 +59,13 @@ namespace DayZServerControllerUI.Windows
             }
         }
 
-        public event Action? ModUpdateDetected;
+        /// <summary>
+        /// Is true if the ModUpdate Timer detects an update
+        /// </summary>
+        public bool ModUpdateInProgress => _modUpdateInProgress;
+
+        #endregion
+
         public event Action? ServerRestarting;
         public event PropertyChangedEventHandler? PropertyChanged;
         public event Action<bool>? SettingsValidStatusChanged;
@@ -83,7 +91,6 @@ namespace DayZServerControllerUI.Windows
 
             // Create SettingsWrapper Window, but it is hidden at first
             _settingsWindow = new SettingsWindow();
-            _settingsWindow.SettingsChangedByUser += SettingsWindow_SettingsChangedByUser;
 
             // Open SettingsWrapper Window if first startup
             if (DayzCtrlSettings.Default.FirstStart)
@@ -98,6 +105,8 @@ namespace DayZServerControllerUI.Windows
         {
             // Forward the SettingsChanged event to MainWindow via PropertyChanged Event
             OnPropertyChanged(nameof(ServerCtrlSettingsWrapper));
+
+            // TODO: Use bindings instead of event
 
             // .. and also tell the MainWindow if all SettingsWrapper are valid
             SettingsValidStatusChanged?.Invoke(_settingsWindow.AllSettingsValid);
@@ -168,6 +177,9 @@ namespace DayZServerControllerUI.Windows
             {
                 case true:
                     // Init SteamCmd, credentials are necessary
+                    if (_steamCmdWrapper == null)
+                        throw new ArgumentNullException($"SteamCmdWrapper is null where it shouldn't be null.");
+
                     _steamCmdWrapper.Init(credentials);
 
                     break;
@@ -254,7 +266,8 @@ namespace DayZServerControllerUI.Windows
             if (!_modManager.ModUpdateAvailable)
                 return;
 
-            ModUpdateDetected?.Invoke();
+            _modUpdateInProgress = true;
+            OnPropertyChanged(nameof(ModUpdateInProgress));
 
             await _logger.WriteLineAsync($"Mods need an update. Restarting in 5 Minutes!");
 
@@ -277,6 +290,9 @@ namespace DayZServerControllerUI.Windows
 
             await _logger.WriteLineAsync($"Server started! Next restart scheduled at " +
                                          $"{(_dayZServerHelper.TimeOfNextRestart.HasValue ? _dayZServerHelper.TimeOfNextRestart.Value.ToLongTimeString() : String.Empty)}");
+
+            _modUpdateInProgress = false;
+            OnPropertyChanged(nameof(ModUpdateInProgress));
         }
 
         private async void RestartTimer_Elapsed(object? sender, ElapsedEventArgs e)

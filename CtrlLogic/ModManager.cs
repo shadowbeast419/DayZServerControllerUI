@@ -8,10 +8,10 @@ namespace DayZServerControllerUI.CtrlLogic
 {
     internal class ModManager
     {
-        public readonly int DayZGameId = 221100;
+        private readonly int DayZGameId = 221100;
 
         private readonly DirectoryInfo _workshopModFolder;
-        private readonly DirectoryInfo _dayzServerFolder;
+        private readonly DirectoryInfo? _dayzServerFolder;
         private Dictionary<long, string> _modListDict = new();
 
         // Stores the Workshop Mod Directories as keys and the DayZ-Server Mod Directories as values

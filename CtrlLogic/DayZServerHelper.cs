@@ -11,7 +11,7 @@ namespace DayZServerControllerUI.CtrlLogic
         private readonly FileInfo? _dayzServerPath;
         private readonly string _dayZServerProcName;
         private readonly int _restartInterval;
-        private readonly System.Timers.Timer? _restartTimer;
+        private readonly System.Timers.Timer _restartTimer;
         private DateTime? _startTime;
         private bool _timerStoppedManually = false;
 

@@ -22,6 +22,7 @@ SOFTWARE. */
 
 using System;
 // ReSharper disable UnusedType.Global
+#pragma warning disable CS8618
 
 #pragma warning disable 1591
 // ReSharper disable UnusedMember.Global

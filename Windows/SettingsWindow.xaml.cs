@@ -22,20 +22,31 @@ namespace DayZServerControllerUI.Windows
     /// </summary>
     public sealed partial class SettingsWindow : IDisposable, INotifyPropertyChanged
     {
-        private readonly ServerControlSettingsWrapper _settingsWrapper;
+        private readonly ServerControlSettingsWrapper _settingsWrapper = new (DayzCtrlSettings.Default.SteamCredentialStorageName ?? "SteamCredentials");
         private readonly List<UserControlPathSetting> _pathUserControls;
 
         public ServerControlSettingsWrapper SettingsWrapper => _settingsWrapper;
-        public bool AllSettingsValid => _settingsWrapper.SettingsValid;
 
-        // Property for UI Bindings
+
+        #region Properties for UI Bindings
+
         public bool SteamCmdEnabled
         {
             get => _settingsWrapper.UseSteamCmd;
             set => _settingsWrapper.UseSteamCmd = value;
         }
 
-        public event Action? SettingsChangedByUser;
+        public bool AllSettingsValid => _settingsWrapper.SettingsValid;
+
+        public bool DiscordBotIsEnabled
+        {
+            // Inverted logic of DiscordBot-Enable applies better to UI
+            get => !_settingsWrapper.MuteDiscordBot;
+            set => _settingsWrapper.MuteDiscordBot = !value;
+        }
+
+        #endregion
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public SettingsWindow()
@@ -46,7 +57,6 @@ namespace DayZServerControllerUI.Windows
             this.Hide();
             
             _pathUserControls = new List<UserControlPathSetting>();
-            _settingsWrapper = new ServerControlSettingsWrapper(DayzCtrlSettings.Default.SteamCredentialStorageName ?? "SteamCredentials");
 
             // Get all Path-UserControls by Reflection
             foreach (var member in this.GetType().GetMembers())
@@ -144,7 +154,7 @@ namespace DayZServerControllerUI.Windows
         private void UserControlPathSetting_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             // Notify the MainViewModel of a settings change
-            SettingsChangedByUser?.Invoke();
+            OnPropertyChanged(nameof(AllSettingsValid));
         }
 
         private void ApplySettingsToUi()
@@ -166,11 +176,14 @@ namespace DayZServerControllerUI.Windows
             UserControlDiscordFilePath.SelectedPath = _settingsWrapper.DiscordFilePath?.FullName;
             UserControlServerLogFilePath.SelectedPath = _settingsWrapper.DayzServerLogFilePath?.FullName;
 
-            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
-
-            SettingsChangedByUser?.Invoke();
+            OnPropertyChanged(nameof(AllSettingsValid));
         }
 
+        /// <summary>
+        /// If SteamCmd is used, disable/enable Controls accordingly
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CheckBoxUseSteamCmd_Click(object sender, RoutedEventArgs e)
         {
             if (_settingsWrapper.UseSteamCmd == CheckBoxUseSteamCmd.IsChecked)
@@ -178,13 +191,10 @@ namespace DayZServerControllerUI.Windows
 
             _settingsWrapper.UseSteamCmd = CheckBoxUseSteamCmd.IsChecked ?? false;
 
-            TextBoxSteamUser.IsEnabled = _settingsWrapper.UseSteamCmd;
-            PasswordBoxSteamPassword.IsEnabled = _settingsWrapper.UseSteamCmd;
-
-            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
-
+            // Note:
+            // Some IsEnabled-Assignments happen implicitly via Bindings to the UseSteamCmd-Property
+            UserControlSteamCmdPath.Status = _settingsWrapper.UseSteamCmd ? UserControlPathSettingState.Disabled : UserControlPathSettingState.PathInvalid;
             OnPropertyChanged(nameof(SteamCmdEnabled));
-            SettingsChangedByUser?.Invoke();
         }
 
         private void CheckBoxMuteDiscord_Click(object sender, RoutedEventArgs e)
@@ -194,9 +204,9 @@ namespace DayZServerControllerUI.Windows
 
             _settingsWrapper.MuteDiscordBot = CheckBoxMuteDiscord.IsChecked ?? false;
 
-            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
-
-            SettingsChangedByUser?.Invoke();
+            // Inform the UI about a possible change
+            OnPropertyChanged(nameof(AllSettingsValid));
+            OnPropertyChanged(nameof(DiscordBotIsEnabled));
         }
 
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
@@ -218,9 +228,8 @@ namespace DayZServerControllerUI.Windows
                 _settingsWrapper.SteamCredentials = new Credential(TextBoxSteamUser.Text, PasswordBoxSteamPassword.Password);
             }
 
-            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
-
-            SettingsChangedByUser?.Invoke();
+            // Inform the UI about a possible change
+            OnPropertyChanged(nameof(AllSettingsValid));
         }
 
         private void PasswordBoxSteamPassword_OnPasswordChanged(object sender, RoutedEventArgs e)
@@ -230,10 +239,9 @@ namespace DayZServerControllerUI.Windows
             {
                 _settingsWrapper.SteamCredentials = new Credential(TextBoxSteamUser.Text, PasswordBoxSteamPassword.Password);
             }
-            
-            ButtonSave.IsEnabled = _settingsWrapper.SettingsValid;
 
-            SettingsChangedByUser?.Invoke();
+            // Inform the UI about a possible change
+            OnPropertyChanged(nameof(AllSettingsValid));
         }
 
         // Hide Window instead of closing

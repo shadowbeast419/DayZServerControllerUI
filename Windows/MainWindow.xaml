@@ -34,7 +34,7 @@
                             <RowDefinition Height="50"/>
                             <RowDefinition Height="50"/>
                             <RowDefinition Height="1*"/>
-                            <RowDefinition Height="80"/>
+                            <RowDefinition Height="150"/>
                         </Grid.RowDefinitions>
                         <GroupBox Header="Steam Client Status" Grid.Row="0">
                             <Label x:Name="LabelSteamStatus" Content="Process not detected" Foreground="#FFA02727"/>
@@ -72,19 +72,15 @@
                             </Grid>
                         </GroupBox>
                         <Grid Grid.Row="3" Grid.Column="0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
+                            <Grid.Resources>
+                                <ImageBrush x:Key="ImageButtonDiscordLink" ImageSource="/Windows/AustrianDayZDiscordLogo.png" Stretch="UniformToFill"/>
+                            </Grid.Resources>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1*"/>
                                 <ColumnDefinition Width="2*"/>
                             </Grid.ColumnDefinitions>
                             <Image Grid.Column="0" Grid.Row="0" Source="/Windows/AustrianDayzLogo.png"/>
-                            <Button Grid.Column="1" Grid.Row="0" Name="ButtonDiscordLink" Click="ButtonDiscordLink_OnClick">
-                                <StackPanel>
-                                    <Image Name="ImageButtonDiscordLink" Source="/Windows/DiscordButtonLogo.png" SizeChanged="ImageButtonDiscordLink_OnSizeChanged"/>
-                                </StackPanel>
-                            </Button>
+                            <Button Grid.Column="1" Grid.Row="0" Name="ButtonDiscordLink" Click="ButtonDiscordLink_OnClick" Background="{StaticResource ImageButtonDiscordLink}"/>
                         </Grid>
                     </Grid>
                 </TabItem>
